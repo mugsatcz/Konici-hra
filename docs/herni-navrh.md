@@ -137,14 +137,23 @@ docs/
 - ✅ Jedna oblast pro procházku (Louka + potůček) se sbíráním jablíček.
 - ✅ Při vodění jde dítě vedle koníka s vodítkem.
 - ✅ Ukládání hry.
-- ☐ Zvuky a hudba.
+- ✅ Zvuky a hudba (zatím syntetizované, `tools/make_sounds.py`).
 - **Cíl:** hratelné na tabletu, otestovat s dítětem.
 
 ### Fáze 2 – Svět a sbírání
 - ✅ Mapa světa se 3 oblastmi (louka s potůčkem, březový lesík, rybníček); lesík se odemkne po 1. procházce, rybníček po 3.
 - ✅ Album objevů: 7 zvířátek a 3 místa.
 - ✅ Obchůdek: mašle, deka, věneček, duhová hříva, kytky do okna, podkova pro štěstí.
-- ☐ Denní doba.
+- ✅ Denní doba (ráno, den, západ slunce, večer).
+
+### Fáze 2.5 – Objevy a zážitky
+- ✅ Kouzelný les (odemkne se po 5 procházkách): sova, liška a vzácný jednorožec.
+- ✅ Keříky s překvapením: schovaná věc, vykukující zvířátko, vylétající motýlek.
+- ✅ Ukrytý poklad v každém místě s ozdobou jako odměnou (zlaté podkovy, hvězdná deka, lucerna, krystal).
+- ✅ Úkol na každou procházku, odměnou hvězda a podkovy.
+- ✅ Ťuknutí na zvířátko: poskočí a řekne zajímavost o sobě.
+- ✅ Počasí a příroda: déšť s duhou, světlušky, padající listí, skákající rybky.
+- ✅ Album se třemi záložkami: zvířátka, místa a poklady, zážitky.
 
 ### Fáze 3 – Více koníků a obsahu
 - Adopce dalších koníků (barvy, plemena, jméno), hříbě.

@@ -8,6 +8,7 @@ var _buttons := {}
 
 
 func _ready() -> void:
+	Audio.music("stable")
 	var pony := PonyArt.new()
 	pony.position = Vector2(250, 420)
 	pony.scale = Vector2(1.5, 1.5)
@@ -27,12 +28,17 @@ func _ready() -> void:
 
 	var grid := GridContainer.new()
 	grid.columns = 2
-	grid.position = Vector2(500, 30)
+	grid.position = Vector2(500, 24)
 	grid.add_theme_constant_override("h_separation", 20)
-	grid.add_theme_constant_override("v_separation", 14)
+	grid.add_theme_constant_override("v_separation", 10)
 	ui.add_child(grid)
-	for id in WorldData.SHOP:
-		var button := UiStyle.big_button("", Color("c06fd8"), Vector2(360, 84))
+	var ids: Array = WorldData.SHOP.keys()
+	for id in WorldData.TREASURE_REWARDS:
+		if id in GameState.owned:
+			ids.append(id)
+	for id in ids:
+		var color := Color("e8b923") if WorldData.TREASURE_REWARDS.has(id) else Color("c06fd8")
+		var button := UiStyle.big_button("", color, Vector2(360, 80))
 		button.add_theme_font_size_override("font_size", 21)
 		button.pressed.connect(_press.bind(id))
 		grid.add_child(button)
@@ -48,7 +54,9 @@ func _ready() -> void:
 func _press(id: String) -> void:
 	if id in GameState.owned:
 		GameState.toggle_worn(id)
-	elif not GameState.buy(id):
+	elif GameState.buy(id):
+		Audio.play("treasure", 0.0)
+	else:
 		_wallet.text = "Na tohle ještě nemáš dost. Nasbírej víc na procházce!"
 		UiStyle.bounce(_wallet)
 		return
@@ -66,6 +74,9 @@ func _refresh() -> void:
 	var inv := GameState.inventory
 	_wallet.text = "Máš: %s, %s, %s" % [WorldData.count_text("apple", inv.apple), WorldData.count_text("flower", inv.flower), WorldData.count_text("horseshoe", inv.horseshoe)]
 	for id in _buttons:
+		if WorldData.TREASURE_REWARDS.has(id):
+			_buttons[id].text = "★ %s\n%s" % [WorldData.TREASURE_REWARDS[id], "Sundat" if GameState.wears(id) else "Nasadit"]
+			continue
 		var item: Dictionary = WorldData.SHOP[id]
 		var text: String = item.name + "\n"
 		if id in GameState.owned:

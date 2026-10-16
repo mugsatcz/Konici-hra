@@ -23,6 +23,17 @@ func _ready() -> void:
 	play.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
 	ui.add_child(play)
 
+	var sound := UiStyle.big_button("", Color("3fa9f5"), Vector2(200, 70))
+	sound.add_theme_font_size_override("font_size", 24)
+	sound.position = Vector2(1056, 630)
+	var label_sound := func(): sound.text = "Zvuk: zapnutý" if GameState.sound_on else "Zvuk: vypnutý"
+	label_sound.call()
+	sound.pressed.connect(func():
+		GameState.set_sound(not GameState.sound_on)
+		label_sound.call())
+	ui.add_child(sound)
+	Audio.music("stable")
+
 
 func _draw() -> void:
 	var size := get_viewport_rect().size

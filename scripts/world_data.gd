@@ -9,31 +9,50 @@ const AREAS := {
 		"ground": Color("7ccf63"),
 		"water": "stream",
 		"trees": 40,
-		"birch": false,
+		"tree_style": "oak",
+		"bushes": 8,
 		"animals": ["zajicek", "motyl"],
 		"items": ["apple", "apple", "flower", "flower", "horseshoe"],
+		"music": "walk",
 	},
 	"lesik": {
 		"name": "Březový lesík",
 		"unlock_walks": 1,
-		"map_pos": Vector2(660, 250),
+		"map_pos": Vector2(640, 250),
 		"ground": Color("6cbf5a"),
 		"water": "none",
 		"trees": 110,
-		"birch": true,
+		"tree_style": "birch",
+		"bushes": 12,
 		"animals": ["jezek", "veverka", "srnka"],
 		"items": ["flower", "flower", "horseshoe", "apple"],
+		"music": "walk",
 	},
 	"rybnicek": {
 		"name": "Rybníček",
 		"unlock_walks": 3,
-		"map_pos": Vector2(1000, 470),
+		"map_pos": Vector2(930, 480),
 		"ground": Color("86d66b"),
 		"water": "pond",
 		"trees": 30,
-		"birch": false,
+		"tree_style": "oak",
+		"bushes": 8,
 		"animals": ["kachna", "zabka"],
 		"items": ["apple", "flower", "horseshoe", "horseshoe"],
+		"music": "walk",
+	},
+	"kouzelny_les": {
+		"name": "Kouzelný les",
+		"unlock_walks": 5,
+		"map_pos": Vector2(1090, 220),
+		"ground": Color("5fae86"),
+		"water": "none",
+		"trees": 90,
+		"tree_style": "magic",
+		"bushes": 10,
+		"animals": ["sova", "liska", "jednorozec"],
+		"items": ["flower", "horseshoe", "horseshoe", "apple"],
+		"music": "magic",
 	},
 }
 
@@ -45,6 +64,41 @@ const ANIMALS := {
 	"srnka": "Srnka",
 	"kachna": "Kachnička",
 	"zabka": "Žabka",
+	"sova": "Sova",
+	"liska": "Liška",
+	"jednorozec": "Jednorožec",
+}
+
+## Co zvířátko „řekne“, když na něj dítě ťukne.
+const ANIMAL_FACTS := {
+	"zajicek": "Zajíček má dlouhé uši, aby slyšel každý šelest.",
+	"motyl": "Motýlek ochutnává kytičky nožičkama!",
+	"jezek": "Ježek v noci hledá brouky a na zimu spí.",
+	"veverka": "Veverka si schovává oříšky a pak je hledá.",
+	"srnka": "Srnka je plachá, šeptej, ať ji nevyplašíš.",
+	"kachna": "Kachnička má nepromokavé peříčko.",
+	"zabka": "Žabka umí skočit mnohokrát dál, než je sama dlouhá.",
+	"sova": "Sova umí otočit hlavu skoro dokola. Hů hů!",
+	"liska": "Liška má huňatý ocas, který ji v zimě hřeje.",
+	"jednorozec": "Jednorožec se ukáže jen kamarádům koníků!",
+}
+
+## Ukrytý poklad v každém místě; odměnou je ozdoba.
+const TREASURES := {
+	"louka": {"name": "Zlatá podkova", "pos": Vector2(2700, 300), "reward": "golden_hooves", "hint": "Na druhé straně potůčku, úplně nahoře."},
+	"lesik": {"name": "Hvězdná deka", "pos": Vector2(2780, 1800), "reward": "star_blanket", "hint": "V nejvzdálenějším rohu lesíka, dole vpravo."},
+	"rybnicek": {"name": "Kouzelná lucerna", "pos": Vector2(2650, 380), "reward": "lantern", "hint": "Za rybníčkem, nahoře vpravo."},
+	"kouzelny_les": {"name": "Duhový krystal", "pos": Vector2(250, 250), "reward": "crystal", "hint": "Tam, kde les začíná, v levém horním rohu."},
+}
+
+## Zážitky do alba: věci, které se stanou jen někdy.
+const MOMENTS := {
+	"duha": "Duha po dešti",
+	"svetlusky": "Světlušky za soumraku",
+	"zapad": "Západ slunce",
+	"rybka": "Vyskočila rybka",
+	"brod": "Přes potůček v sedle",
+	"listi": "Padající listí",
 }
 
 ## Tvary pro 1, 2–4 a 5+ kusů (ve 4. pádě: „máš 1 podkovu“).
@@ -62,6 +116,14 @@ const SHOP := {
 	"rainbow": {"name": "Duhová hříva", "cost": {"horseshoe": 4, "flower": 2}},
 	"window_flowers": {"name": "Kytky do okna stáje", "cost": {"flower": 4}},
 	"lucky_shoe": {"name": "Podkova pro štěstí", "cost": {"horseshoe": 3}},
+}
+
+## Ozdoby z pokladů se nekupují, najdou se na procházce.
+const TREASURE_REWARDS := {
+	"golden_hooves": "Zlaté podkovy",
+	"star_blanket": "Hvězdná deka",
+	"lantern": "Lucerna do stáje",
+	"crystal": "Krystal do stáje",
 }
 
 

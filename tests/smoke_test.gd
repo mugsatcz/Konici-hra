@@ -6,6 +6,10 @@ const SCENES := ["res://scenes/main_menu.tscn", "res://scenes/stable.tscn", "res
 
 
 func _initialize() -> void:
+	# Pojistka: když test spadne uprostřed, nesmí viset donekonečna.
+	create_timer(90.0).timeout.connect(func():
+		push_error("Test nedoběhl včas.")
+		quit(1))
 	_run.call_deferred()
 
 
@@ -42,6 +46,7 @@ func _run() -> void:
 		await process_frame
 		print("OK procházka ", area)
 
+	state.reset()
 	var hunger: float = state.needs.hunger
 	state.feed()
 	failures += _check(state.needs.hunger > hunger, "krmení zvedne jídlo")
@@ -63,6 +68,17 @@ func _run() -> void:
 	failures += _check(not state.buy("crown"), "bez kytiček věneček koupit nejde")
 	state.toggle_worn("bow")
 	failures += _check(not state.wears("bow"), "mašli jde sundat")
+	state.grant("crystal")
+	failures += _check(state.wears("crystal"), "poklad dá ozdobu")
+	var quest = load("res://scripts/walk_quest.gd").new()
+	quest.kind = "collect"
+	quest.detail = "flower"
+	quest.count = 2
+	failures += _check(not quest.record("collect", "apple") and not quest.record("collect", "flower") and quest.record("collect", "flower"), "úkol se splní po 2 kytičkách")
+	for area in WorldData.AREAS:
+		failures += _check(WorldData.TREASURES.has(area) and WorldData.TREASURE_REWARDS.has(WorldData.TREASURES[area].reward), "poklad v místě " + area)
+	for id in WorldData.ANIMALS:
+		failures += _check(WorldData.ANIMAL_FACTS.has(id), "zvířátko %s má zajímavost" % id)
 	state.reset()
 
 	print("Hotovo, chyb: ", failures)

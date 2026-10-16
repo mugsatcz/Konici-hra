@@ -26,12 +26,16 @@ var owned: Array = []
 var worn: Array = []
 ## Kam vede příští procházka.
 var current_area := "louka"
+## Hvězdy za splněné úkoly.
+var stars := 0
+var sound_on := true
 
 var _save_timer := 0.0
 
 
 func _ready() -> void:
 	load_game()
+	Audio.enabled = sound_on
 
 
 func _process(delta: float) -> void:
@@ -105,6 +109,8 @@ func save_game() -> void:
 		"discovered": discovered,
 		"owned": owned,
 		"worn": worn,
+		"stars": stars,
+		"sound_on": sound_on,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -127,6 +133,8 @@ func load_game() -> void:
 	discovered = data.get("discovered", [])
 	owned = data.get("owned", [])
 	worn = data.get("worn", [])
+	stars = int(data.get("stars", 0))
+	sound_on = bool(data.get("sound_on", true))
 
 
 func reset() -> void:
@@ -139,6 +147,7 @@ func reset() -> void:
 	owned = []
 	worn = []
 	current_area = "louka"
+	stars = 0
 	save_game()
 	needs_changed.emit()
 	inventory_changed.emit()
@@ -192,3 +201,25 @@ func toggle_worn(id: String) -> void:
 
 func wears(id: String) -> bool:
 	return id in worn
+
+
+## Poklad dá ozdobu zdarma a rovnou ji nasadí.
+func grant(reward: String) -> void:
+	if reward in owned:
+		return
+	owned.append(reward)
+	worn.append(reward)
+	save_game()
+	looks_changed.emit()
+
+
+func add_star() -> void:
+	stars += 1
+	save_game()
+	inventory_changed.emit()
+
+
+func set_sound(on: bool) -> void:
+	sound_on = on
+	Audio.enabled = on
+	save_game()

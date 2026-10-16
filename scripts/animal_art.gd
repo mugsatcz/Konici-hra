@@ -6,12 +6,24 @@ var kind := "zajicek"
 var silhouette := false
 var animated := true
 var _t := 0.0
+var _joy := 0.0
 
 
 func _process(delta: float) -> void:
 	if animated:
 		_t += delta
+		_joy = maxf(0.0, _joy - delta)
 		queue_redraw()
+
+
+## Radostný poskok se srdíčkem, když na zvířátko dítě ťukne.
+func react() -> void:
+	if _joy > 0.0:
+		return
+	_joy = 1.0
+	var tween := create_tween()
+	tween.tween_property(self, "position:y", position.y - 30.0, 0.15).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(self, "position:y", position.y, 0.25).set_trans(Tween.TRANS_BOUNCE)
 
 
 func _c(color: Color) -> Color:
@@ -20,6 +32,12 @@ func _c(color: Color) -> Color:
 
 func _draw() -> void:
 	var dark := _c(Color("3a2a20"))
+	if _joy > 0.0:
+		var hc := Color(1, 0.35, 0.55, _joy)
+		var hp := Vector2(0, -70 - (1.0 - _joy) * 30.0)
+		draw_circle(hp + Vector2(-5, 0), 7, hc)
+		draw_circle(hp + Vector2(5, 0), 7, hc)
+		draw_colored_polygon(PackedVector2Array([hp + Vector2(-11, 2), hp + Vector2(11, 2), hp + Vector2(0, 14)]), hc)
 	var hop := absf(sin(_t * 3.0)) * -8.0
 	match kind:
 		"zajicek":
@@ -79,5 +97,57 @@ func _draw() -> void:
 			draw_circle(Vector2(-9, -17 + hop * 0.5), 3, dark)
 			draw_circle(Vector2(9, -17 + hop * 0.5), 3, dark)
 			draw_arc(Vector2(0, 0 + hop * 0.5), 8, 0.4, 2.7, 8, dark, 2)
+		"sova":
+			var blink := 1.0 if fmod(_t, 4.0) > 0.15 else 0.1
+			draw_set_transform(Vector2.ZERO, 0, Vector2(1, 1.25))
+			draw_circle(Vector2.ZERO, 26, _c(Color("8a6a4a")))
+			draw_set_transform(Vector2.ZERO)
+			draw_circle(Vector2(0, 10), 15, _c(Color("d9c09a")))
+			draw_colored_polygon(PackedVector2Array([Vector2(-22, -24), Vector2(-14, -40), Vector2(-6, -26)]), _c(Color("8a6a4a")))
+			draw_colored_polygon(PackedVector2Array([Vector2(22, -24), Vector2(14, -40), Vector2(6, -26)]), _c(Color("8a6a4a")))
+			for ex in [-11, 11]:
+				draw_circle(Vector2(ex, -12), 10, _c(Color("fff2c0")))
+				draw_set_transform(Vector2(ex, -12), 0, Vector2(1, blink))
+				draw_circle(Vector2.ZERO, 5, dark)
+				draw_set_transform(Vector2.ZERO)
+			draw_colored_polygon(PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(0, 4)]), _c(Color("f0a030")))
+		"liska":
+			var wag := sin(_t * 4.0) * 0.3
+			draw_set_transform(Vector2(-30, -5), wag, Vector2(1.4, 0.6))
+			draw_circle(Vector2(-12, 0), 16, _c(Color("e8742a")))
+			draw_circle(Vector2(-26, 0), 8, _c(Color.WHITE))
+			draw_set_transform(Vector2.ZERO)
+			draw_set_transform(Vector2(0, 0), 0, Vector2(1.3, 0.75))
+			draw_circle(Vector2.ZERO, 22, _c(Color("e8742a")))
+			draw_set_transform(Vector2.ZERO)
+			for x in [-14, -4, 12, 20]:
+				draw_rect(Rect2(x - 3, 10, 6, 20), _c(Color("3a2a20")))
+			draw_colored_polygon(PackedVector2Array([Vector2(18, -26), Vector2(48, -10), Vector2(20, 2)]), _c(Color("e8742a")))
+			draw_colored_polygon(PackedVector2Array([Vector2(30, -12), Vector2(48, -10), Vector2(30, -2)]), _c(Color.WHITE))
+			draw_colored_polygon(PackedVector2Array([Vector2(18, -26), Vector2(22, -42), Vector2(30, -22)]), _c(Color("c95a1a")))
+			draw_circle(Vector2(48, -10), 3, dark)
+			draw_circle(Vector2(28, -16), 2.5, dark)
+		"jednorozec":
+			var glow := 0.5 + 0.5 * sin(_t * 3.0)
+			if not silhouette:
+				draw_circle(Vector2(0, -10), 70, Color(1, 0.95, 1, 0.15 + glow * 0.15))
+			draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.6))
+			draw_circle(Vector2.ZERO, 34, _c(Color("fbf7ff")))
+			draw_set_transform(Vector2.ZERO)
+			for x in [-20, -8, 12, 22]:
+				draw_rect(Rect2(x - 4, 10, 8, 30), _c(Color("efe6fa")))
+			draw_line(Vector2(24, -8), Vector2(38, -36), _c(Color("fbf7ff")), 14)
+			draw_circle(Vector2(44, -40), 14, _c(Color("fbf7ff")))
+			draw_colored_polygon(PackedVector2Array([Vector2(42, -52), Vector2(54, -84), Vector2(52, -50)]), _c(Color("ffd84d")))
+			for i in 4:
+				draw_circle(Vector2(28 - i * 4, -44 + i * 10), 8, _c(Color.from_hsv(i / 4.0, 0.5, 1.0)))
+			draw_circle(Vector2(-36, 0), 9, _c(Color.from_hsv(0.8, 0.4, 1.0)))
+			draw_circle(Vector2(-42, 10), 8, _c(Color.from_hsv(0.6, 0.4, 1.0)))
+			draw_circle(Vector2(48, -42), 2.5, dark)
+			if not silhouette:
+				for i in 4:
+					var a := _t * 1.5 + i * TAU / 4.0
+					draw_circle(Vector2.from_angle(a) * 55 + Vector2(0, -10), 3, Color(1, 0.95, 0.5, glow))
+	draw_set_transform(Vector2.ZERO)
 	if silhouette:
 		draw_string(ThemeDB.fallback_font, Vector2(-10, 12), "?", HORIZONTAL_ALIGNMENT_CENTER, -1, 40, Color.WHITE)

@@ -22,7 +22,9 @@ static func big_button(text: String, color: Color, min_size := Vector2(170, 90))
 		if state == "focus":
 			box.draw_center = false
 		button.add_theme_stylebox_override(state, box)
-	button.pressed.connect(func(): bounce(button))
+	button.pressed.connect(func():
+		bounce(button)
+		Audio.play("click"))
 	return button
 
 

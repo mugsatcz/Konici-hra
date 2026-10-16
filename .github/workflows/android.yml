@@ -42,7 +42,7 @@ jobs:
             > ~/.config/godot/editor_settings-4.4.tres
 
       - name: Import project
-        run: ~/godot/godot --headless --import || true
+        run: timeout 300 ~/godot/godot --headless --import || true
 
       - name: Smoke test
         run: ~/godot/godot --headless --script res://tests/smoke_test.gd

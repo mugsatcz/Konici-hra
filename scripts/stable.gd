@@ -16,6 +16,7 @@ var _items_label: Label
 var _hint: Label
 var _brush_button: Button
 var _sparkles: Array = []
+var _brush_sound := 0
 
 
 func _ready() -> void:
@@ -24,6 +25,7 @@ func _ready() -> void:
 	pony.scale = Vector2(1.5, 1.5)
 	add_child(pony)
 	_build_ui()
+	Audio.music("stable")
 	GameState.needs_changed.connect(_refresh)
 	GameState.inventory_changed.connect(_refresh)
 	_refresh()
@@ -59,7 +61,7 @@ func _build_ui() -> void:
 		_bars[need[0]] = bar
 
 	_items_label = UiStyle.label("", 28, Color.WHITE)
-	_items_label.position = Vector2(860, 24)
+	_items_label.position = Vector2(800, 24)
 	ui.add_child(_items_label)
 
 	var extras := HBoxContainer.new()
@@ -84,13 +86,21 @@ func _build_ui() -> void:
 
 	var hay := UiStyle.big_button("Seno", Color("e0a526"))
 	hay.pressed.connect(func():
+		var poops_before := GameState.poops
 		GameState.feed()
-		_say("Mňam!"))
+		Audio.play("eat")
+		pony.love()
+		if GameState.poops > poops_before:
+			_say("Mňam! ...a pak udělal koblížek. Ukliď ho ťuknutím!")
+			get_tree().create_timer(0.7).timeout.connect(func(): Audio.play("plop"))
+		else:
+			_say("Mňam!"))
 	buttons.add_child(hay)
 
 	var water := UiStyle.big_button("Voda", Color("3fa9f5"))
 	water.pressed.connect(func():
 		GameState.give_water()
+		Audio.play("water")
 		_say("Glo glo glo"))
 	buttons.add_child(water)
 
@@ -111,7 +121,7 @@ func _refresh() -> void:
 		_bars[need].value = GameState.needs[need]
 	pony.mood = GameState.happiness()
 	var inv := GameState.inventory
-	_items_label.text = "Jablka %d   Kytky %d   Podkovy %d" % [inv.apple, inv.flower, inv.horseshoe]
+	_items_label.text = "Jablka %d  Kytky %d  Podkovy %d  ★ %d" % [inv.apple, inv.flower, inv.horseshoe, GameState.stars]
 	queue_redraw()
 
 
@@ -125,12 +135,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	var pos: Vector2
 	if event is InputEventScreenTouch and event.pressed:
 		pos = event.position
+		if not brushing and pos.distance_to(pony.position + Vector2(20, -60)) < 110:
+			pony.love()
+			Audio.play("neigh")
+			_say("%s tě má ráda!" % GameState.pony_name)
+			return
 		_try_clean(pos)
 	elif event is InputEventScreenDrag:
 		pos = event.position
 		if brushing and pos.distance_to(pony.position + Vector2(0, -20)) < 140:
 			GameState.brush(0.6)
 			_sparkles.append([pos, 0.6])
+			_brush_sound -= 1
+			if _brush_sound <= 0:
+				_brush_sound = 12
+				Audio.play("brush", 0.2)
 		_try_clean(pos)
 
 
@@ -138,7 +157,9 @@ func _try_clean(pos: Vector2) -> void:
 	for i in GameState.poops:
 		if pos.distance_to(POOP_SPOTS[i]) < 45:
 			GameState.clean_poop()
-			_say("Uklizeno!")
+			Audio.play("pickup")
+			_sparkles.append([POOP_SPOTS[GameState.poops], 0.8])
+			_say("Uklizeno! Hnůj půjde na zahrádku." if GameState.poops == 0 else "Uklizeno!")
 			return
 
 
@@ -146,8 +167,7 @@ func _process(delta: float) -> void:
 	for s in _sparkles:
 		s[1] -= delta
 	_sparkles = _sparkles.filter(func(s): return s[1] > 0.0)
-	if not _sparkles.is_empty():
-		queue_redraw()
+	queue_redraw()
 
 
 func _draw() -> void:
@@ -167,6 +187,17 @@ func _draw() -> void:
 			var f := Vector2(890 + i * 33, 282)
 			draw_line(f, f + Vector2(0, 12), Color("3c9a3c"), 4)
 			draw_circle(f, 11, [Color("ff7fc4"), Color("ffe066"), Color("ff5f5f")][i % 3])
+	if GameState.wears("lantern"):
+		var glow := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 300.0)
+		draw_circle(Vector2(560, 190), 70, Color(1, 0.85, 0.4, 0.18 * glow))
+		draw_line(Vector2(560, 110), Vector2(560, 165), Color("4a2c1a"), 4)
+		draw_rect(Rect2(542, 165, 36, 50), Color("ffd966"))
+		draw_rect(Rect2(542, 165, 36, 50), Color("4a2c1a"), false, 4)
+	if GameState.wears("crystal"):
+		var hue := fmod(Time.get_ticks_msec() / 3000.0, 1.0)
+		var c := Color.from_hsv(hue, 0.45, 1.0)
+		draw_circle(Vector2(1180, 470), 50, Color(c, 0.25))
+		draw_colored_polygon(PackedVector2Array([Vector2(1180, 420), Vector2(1205, 465), Vector2(1180, 500), Vector2(1155, 465)]), c)
 	if GameState.wears("lucky_shoe"):
 		draw_arc(Vector2(640, 150), 34, 0.2, PI - 0.2, 16, Color("c9a227"), 14)
 	# Sláma na podlaze

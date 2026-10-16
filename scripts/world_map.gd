@@ -7,6 +7,7 @@ var _hint: Label
 
 
 func _ready() -> void:
+	Audio.music("stable")
 	var ui := CanvasLayer.new()
 	add_child(ui)
 	var title := UiStyle.label("Kam vyrazíme?", 44, Color.WHITE)
@@ -77,6 +78,15 @@ func _draw() -> void:
 				draw_circle(Vector2.ZERO, 60, Color("4fb3e8"))
 				draw_set_transform(Vector2.ZERO)
 				draw_circle(p + Vector2(20, -5), 10, Color("f7f2e8"))
+			"kouzelny_les":
+				for t in [Vector2(-35, 5), Vector2(0, -25), Vector2(35, 5)]:
+					draw_circle(p + t, 28, Color("2f7f78"))
+				for s in [Vector2(-20, -40), Vector2(25, -30), Vector2(0, 20), Vector2(40, 30)]:
+					draw_circle(p + s, 5, Color("fff3a0"))
+				draw_circle(p + Vector2(-5, 30), 9, Color("b388ff"))
+		if GameState.discovered.has("poklad_" + id):
+			draw_circle(p + Vector2(60, -60), 18, Color("e8b923"))
+			draw_rect(Rect2(p + Vector2(50, -66), Vector2(20, 12)), Color("8a5a35"))
 		if not unlocked:
 			draw_circle(p, 80, Color(0.3, 0.3, 0.35, 0.55))
 			draw_rect(Rect2(p + Vector2(-20, -10), Vector2(40, 32)), Color("e0a526"))
