@@ -132,16 +132,19 @@ docs/
 - ✅ Automatické sestavení APK na GitHubu.
 
 ### Fáze 1 – MVP „Můj první koník“
-- Stáj s 1 koníkem: krmení, napájení, úklid koblížků, hlazení/česání.
-- Ukazatele potřeb a mimika koníka.
-- Jedna oblast pro procházku (Louka + potůček) se sbíráním jablíček.
-- Ukládání hry, základní zvuky a hudba.
+- ✅ Stáj s 1 koníkem: krmení, napájení, úklid koblížků, hlazení/česání.
+- ✅ Ukazatele potřeb a mimika koníka.
+- ✅ Jedna oblast pro procházku (Louka + potůček) se sbíráním jablíček.
+- ✅ Při vodění jde dítě vedle koníka s vodítkem.
+- ✅ Ukládání hry.
+- ☐ Zvuky a hudba.
 - **Cíl:** hratelné na tabletu, otestovat s dítětem.
 
 ### Fáze 2 – Svět a sbírání
-- Mapa světa se 3–4 oblastmi (lesík, potůček, rybníček).
-- Album objevů, zvířátka, denní doba.
-- Obchůdek s ozdobami do stáje a pro koníka.
+- ✅ Mapa světa se 3 oblastmi (louka s potůčkem, březový lesík, rybníček); lesík se odemkne po 1. procházce, rybníček po 3.
+- ✅ Album objevů: 7 zvířátek a 3 místa.
+- ✅ Obchůdek: mašle, deka, věneček, duhová hříva, kytky do okna, podkova pro štěstí.
+- ☐ Denní doba.
 
 ### Fáze 3 – Více koníků a obsahu
 - Adopce dalších koníků (barvy, plemena, jméno), hříbě.

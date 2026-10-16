@@ -59,8 +59,19 @@ func _build_ui() -> void:
 		_bars[need[0]] = bar
 
 	_items_label = UiStyle.label("", 28, Color.WHITE)
-	_items_label.position = Vector2(840, 24)
+	_items_label.position = Vector2(860, 24)
 	ui.add_child(_items_label)
+
+	var extras := HBoxContainer.new()
+	extras.position = Vector2(860, 66)
+	extras.add_theme_constant_override("separation", 16)
+	ui.add_child(extras)
+	var album := UiStyle.big_button("Album", Color("3fa9f5"), Vector2(170, 58))
+	album.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/album.tscn"))
+	extras.add_child(album)
+	var shop := UiStyle.big_button("Obchůdek", Color("ff5fa2"), Vector2(200, 58))
+	shop.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/shop.tscn"))
+	extras.add_child(shop)
 
 	_hint = UiStyle.label("", 28, Color("4a2c1a"))
 	_hint.position = Vector2(420, 230)
@@ -91,7 +102,7 @@ func _build_ui() -> void:
 	buttons.add_child(_brush_button)
 
 	var walk := UiStyle.big_button("Na procházku", Color("5cb85c"), Vector2(300, 90))
-	walk.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/walk.tscn"))
+	walk.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/world_map.tscn"))
 	buttons.add_child(walk)
 
 
@@ -150,6 +161,14 @@ func _draw() -> void:
 	draw_circle(Vector2(1050, 170), 25, Color("ffe066"))
 	draw_rect(Rect2(880, 130, 220, 160), Color("6b3f22"), false, 10)
 	draw_line(Vector2(990, 130), Vector2(990, 290), Color("6b3f22"), 8)
+	if GameState.wears("window_flowers"):
+		draw_rect(Rect2(870, 290, 240, 30), Color("8a5a35"))
+		for i in 7:
+			var f := Vector2(890 + i * 33, 282)
+			draw_line(f, f + Vector2(0, 12), Color("3c9a3c"), 4)
+			draw_circle(f, 11, [Color("ff7fc4"), Color("ffe066"), Color("ff5f5f")][i % 3])
+	if GameState.wears("lucky_shoe"):
+		draw_arc(Vector2(640, 150), 34, 0.2, PI - 0.2, 16, Color("c9a227"), 14)
 	# Sláma na podlaze
 	draw_rect(Rect2(0, 500, size.x, size.y - 500), Color("f2cf6b"))
 	for i in 60:

@@ -38,11 +38,15 @@ func _draw() -> void:
 		draw_rect(Rect2(x - 8, 52, 16, 10), outline)
 	# Ocas
 	var tail := PackedVector2Array([Vector2(-55, -10 + bob), Vector2(-85, 5 + sin(_t * 3) * 6), Vector2(-75, 30), Vector2(-55, 5 + bob)])
-	draw_colored_polygon(tail, mane_color)
+	draw_colored_polygon(tail, Color("c77dff") if GameState.wears("rainbow") else mane_color)
 	# Tělo
 	draw_set_transform(Vector2(0, -5 + bob), 0, Vector2(1.0, 0.6))
 	draw_circle(Vector2.ZERO, 62, coat_color)
 	draw_set_transform(Vector2.ZERO)
+	if GameState.wears("blanket"):
+		draw_rect(Rect2(-35, -38 + bob, 60, 44), Color("3b7dd8"))
+		draw_rect(Rect2(-35, -38 + bob, 60, 44), Color("ffe066"), false, 5)
+		draw_circle(Vector2(-5, -16 + bob), 7, Color("ffe066"))
 	# Krk a hlava
 	draw_colored_polygon(PackedVector2Array([Vector2(30, -25 + bob), Vector2(55, -75 + bob), Vector2(80, -60 + bob), Vector2(60, -5 + bob)]), coat_color)
 	draw_set_transform(Vector2(80, -70 + bob), 0.4, Vector2(1.0, 0.7))
@@ -53,8 +57,19 @@ func _draw() -> void:
 	# Ucho
 	draw_colored_polygon(PackedVector2Array([Vector2(62, -88 + bob), Vector2(66, -112 + bob), Vector2(76, -90 + bob)]), coat_color.darkened(0.15))
 	# Hříva
+	var rainbow := GameState.wears("rainbow")
 	for i in 5:
-		draw_circle(Vector2(48 + i * 6, -80 + i * 13 + bob), 11, mane_color)
+		var c := Color.from_hsv(i / 5.0, 0.6, 1.0) if rainbow else mane_color
+		draw_circle(Vector2(48 + i * 6, -80 + i * 13 + bob), 11, c)
+	if GameState.wears("bow"):
+		var b := Vector2(52, -88 + bob)
+		draw_colored_polygon(PackedVector2Array([b, b + Vector2(-16, -10), b + Vector2(-16, 10)]), Color("ff5fa2"))
+		draw_colored_polygon(PackedVector2Array([b, b + Vector2(16, -10), b + Vector2(16, 10)]), Color("ff5fa2"))
+		draw_circle(b, 5, Color("d63f86"))
+	if GameState.wears("crown"):
+		for i in 5:
+			var f := Vector2(62 + i * 9, -94 + absf(i - 2) * 3 + bob)
+			draw_circle(f, 6, [Color("ff7fc4"), Color("ffe066"), Color("8fd3ff")][i % 3])
 	# Oko podle nálady
 	var eye := Vector2(84, -76 + bob)
 	draw_circle(eye, 9, Color.WHITE)

@@ -2,7 +2,7 @@ extends SceneTree
 ## Rychlý test: načte všechny scény, chvíli je nechá běžet a ověří herní logiku.
 ## Spuštění: godot --headless --script res://tests/smoke_test.gd
 
-const SCENES := ["res://scenes/main_menu.tscn", "res://scenes/stable.tscn", "res://scenes/walk.tscn"]
+const SCENES := ["res://scenes/main_menu.tscn", "res://scenes/stable.tscn", "res://scenes/world_map.tscn", "res://scenes/album.tscn", "res://scenes/shop.tscn"]
 
 
 func _initialize() -> void:
@@ -20,12 +20,27 @@ func _run() -> void:
 			failures += 1
 			continue
 		var node := scene.instantiate()
+		var script: Script = node.get_script()
+		if script == null or not script.can_instantiate():
+			push_error("Skript scény nejde načíst: " + path)
+			failures += 1
 		root.add_child(node)
 		for i in 10:
 			await process_frame
 		node.queue_free()
 		await process_frame
 		print("OK ", path)
+
+	# Procházka ve všech místech světa.
+	for area in WorldData.AREAS:
+		state.current_area = area
+		var walk: Node = load("res://scenes/walk.tscn").instantiate()
+		root.add_child(walk)
+		for i in 10:
+			await process_frame
+		walk.queue_free()
+		await process_frame
+		print("OK procházka ", area)
 
 	var hunger: float = state.needs.hunger
 	state.feed()
@@ -39,6 +54,15 @@ func _run() -> void:
 	state.inventory.apple = 0
 	state.load_game()
 	failures += _check(state.inventory.apple == 1, "uložení a načtení hry")
+	failures += _check(not state.is_area_unlocked("rybnicek"), "rybníček je na začátku zamčený")
+	state.after_walk()
+	failures += _check(state.is_area_unlocked("lesik"), "po procházce se odemkne lesík")
+	failures += _check(state.discover("jezek") and not state.discover("jezek"), "objev se zapíše jen jednou")
+	state.inventory.flower = 3
+	failures += _check(state.buy("bow") and state.wears("bow") and state.inventory.flower == 0, "koupě mašle")
+	failures += _check(not state.buy("crown"), "bez kytiček věneček koupit nejde")
+	state.toggle_worn("bow")
+	failures += _check(not state.wears("bow"), "mašli jde sundat")
 	state.reset()
 
 	print("Hotovo, chyb: ", failures)

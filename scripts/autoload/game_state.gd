@@ -3,6 +3,7 @@ extends Node
 
 signal needs_changed
 signal inventory_changed
+signal looks_changed
 
 const SAVE_PATH := "user://save.json"
 ## O kolik bodů za minutu hraní klesají potřeby (0–100).
@@ -16,6 +17,15 @@ var needs := {"hunger": 80.0, "thirst": 80.0, "grooming": 80.0}
 ## Počet koblížků v boxu, které je potřeba uklidit.
 var poops := 0
 var inventory := {"apple": 0, "flower": 0, "horseshoe": 0}
+## Počet dokončených procházek (odemyká nová místa).
+var walks := 0
+## Objevená zvířátka a místa (album).
+var discovered: Array = []
+## Koupené ozdoby a ty, které jsou právě nasazené.
+var owned: Array = []
+var worn: Array = []
+## Kam vede příští procházka.
+var current_area := "louka"
 
 var _save_timer := 0.0
 
@@ -77,6 +87,7 @@ func add_item(item: String, count := 1) -> void:
 
 ## Po procházce je koník trochu hladový, žíznivý a zablácený.
 func after_walk() -> void:
+	walks += 1
 	needs.hunger = maxf(0.0, needs.hunger - 10.0)
 	needs.thirst = maxf(0.0, needs.thirst - 10.0)
 	needs.grooming = maxf(0.0, needs.grooming - 20.0)
@@ -90,6 +101,10 @@ func save_game() -> void:
 		"needs": needs,
 		"poops": poops,
 		"inventory": inventory,
+		"walks": walks,
+		"discovered": discovered,
+		"owned": owned,
+		"worn": worn,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -108,6 +123,10 @@ func load_game() -> void:
 	poops = int(data.get("poops", 0))
 	for item in data.get("inventory", {}):
 		inventory[item] = int(data.inventory[item])
+	walks = int(data.get("walks", 0))
+	discovered = data.get("discovered", [])
+	owned = data.get("owned", [])
+	worn = data.get("worn", [])
 
 
 func reset() -> void:
@@ -115,6 +134,61 @@ func reset() -> void:
 	needs = {"hunger": 80.0, "thirst": 80.0, "grooming": 80.0}
 	poops = 0
 	inventory = {"apple": 0, "flower": 0, "horseshoe": 0}
+	walks = 0
+	discovered = []
+	owned = []
+	worn = []
+	current_area = "louka"
 	save_game()
 	needs_changed.emit()
 	inventory_changed.emit()
+	looks_changed.emit()
+
+
+func is_area_unlocked(area: String) -> bool:
+	return walks >= WorldData.AREAS[area].unlock_walks
+
+
+## Vrací true, pokud jde o nový objev.
+func discover(id: String) -> bool:
+	if id in discovered:
+		return false
+	discovered.append(id)
+	save_game()
+	return true
+
+
+func can_afford(cost: Dictionary) -> bool:
+	for item in cost:
+		if inventory.get(item, 0) < cost[item]:
+			return false
+	return true
+
+
+func buy(id: String) -> bool:
+	var cost: Dictionary = WorldData.SHOP[id].cost
+	if id in owned or not can_afford(cost):
+		return false
+	for item in cost:
+		inventory[item] -= cost[item]
+	owned.append(id)
+	worn.append(id)
+	save_game()
+	inventory_changed.emit()
+	looks_changed.emit()
+	return true
+
+
+func toggle_worn(id: String) -> void:
+	if id not in owned:
+		return
+	if id in worn:
+		worn.erase(id)
+	else:
+		worn.append(id)
+	save_game()
+	looks_changed.emit()
+
+
+func wears(id: String) -> bool:
+	return id in worn
