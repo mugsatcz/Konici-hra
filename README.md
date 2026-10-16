@@ -11,6 +11,16 @@ Dětská hra pro Android (6–11 let) o péči o koníčky a procházkách barev
 
 Zatím je ve hře úvodní obrazovka, stáj (krmení, voda, česání, úklid koblížků) a procházka s pohledem shora (vodění i jízda, potůček s mostkem, sbírání jablek, kytiček a podkov). Grafika je zatím jen zástupná, kreslená kódem.
 
+## Instalace do tabletu
+
+Po každém nahrání změn GitHub sám sestaví instalační soubor:
+
+1. Na GitHubu otevři záložku **Actions**, vyber poslední běh „Sestavení APK“.
+2. Dole v části **Artifacts** stáhni `konicci-apk` (je to zip, uvnitř je `konicci.apk`).
+3. Soubor přenes do tabletu a otevři ho. Android se zeptá na povolení instalace z neznámých zdrojů, to je potřeba povolit.
+
+Aktualizace se instaluje stejně, uložená hra zůstane zachována.
+
 ## Test
 
 ```

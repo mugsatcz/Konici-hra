@@ -8,6 +8,7 @@ config/name="Koníčci"
 config/description="Dětská hra o péči o koníčky a procházkách přírodou."
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Mobile")
+config/icon="res://icon.svg"
 
 [autoload]
 

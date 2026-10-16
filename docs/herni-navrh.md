@@ -129,7 +129,7 @@ docs/
 ### Fáze 0 – Základ (1. milník)
 - ✅ Godot projekt, struktura složek, rychlý test.
 - ✅ Zástupná grafika, stáj s jedním koníkem, první procházka shora.
-- ☐ Automatické sestavení APK na GitHubu.
+- ✅ Automatické sestavení APK na GitHubu.
 
 ### Fáze 1 – MVP „Můj první koník“
 - Stáj s 1 koníkem: krmení, napájení, úklid koblížků, hlazení/česání.

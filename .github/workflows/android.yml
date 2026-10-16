@@ -1,0 +1,65 @@
+name: Sestavení APK
+
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.4.1
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-android
+
+      - name: Download Godot and Android templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot/templates
+          cd ~/godot
+          base=https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable
+          curl -sSL -o editor.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q editor.zip && rm editor.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          curl -sSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -j templates.tpz 'templates/android_debug.apk' 'templates/android_release.apk' 'templates/version.txt' -d templates
+          rm templates.tpz
+
+      - name: Configure Godot
+        run: |
+          dest=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dest" ~/.config/godot
+          cp ~/godot/templates/* "$dest/"
+          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\n' "$ANDROID_HOME" \
+            > ~/.config/godot/editor_settings-4.4.tres
+
+      - name: Import project
+        run: ~/godot/godot --headless --import || true
+
+      - name: Smoke test
+        run: ~/godot/godot --headless --script res://tests/smoke_test.gd
+
+      - name: Export debug APK
+        env:
+          # Debug klíč je v repozitáři záměrně, aby šlo hru na tabletu aktualizovat bez přeinstalace.
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p export
+          ~/godot/godot --headless --export-debug "Android" export/konicci.apk
+          test -s export/konicci.apk
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --verbose export/konicci.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konicci-apk
+          path: export/konicci.apk

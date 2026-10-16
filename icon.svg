@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#8fd3ff"/>
+  <circle cx="256" cy="560" r="300" fill="#6abf5e"/>
+  <polygon points="200,150 215,60 260,140" fill="#a8693a"/>
+  <ellipse cx="270" cy="260" rx="125" ry="100" fill="#c8834a" transform="rotate(25 270 260)"/>
+  <ellipse cx="345" cy="320" rx="62" ry="52" fill="#e0a77a"/>
+  <circle cx="335" cy="315" r="8" fill="#4a2c1a"/>
+  <circle cx="370" cy="330" r="8" fill="#4a2c1a"/>
+  <path d="M320 360 Q345 380 370 362" stroke="#4a2c1a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="255" cy="235" r="30" fill="#fff"/>
+  <circle cx="262" cy="240" r="19" fill="#4a2c1a"/>
+  <circle cx="268" cy="232" r="7" fill="#fff"/>
+  <circle cx="160" cy="150" r="42" fill="#f2d16b"/>
+  <circle cx="135" cy="215" r="42" fill="#f2d16b"/>
+  <circle cx="135" cy="285" r="42" fill="#f2d16b"/>
+  <circle cx="160" cy="350" r="40" fill="#f2d16b"/>
+  <circle cx="215" cy="125" r="34" fill="#f2d16b"/>
+</svg>
