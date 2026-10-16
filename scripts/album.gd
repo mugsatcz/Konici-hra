@@ -75,7 +75,7 @@ func _show(page: int) -> void:
 				var art := AnimalArt.new()
 				art.kind = id
 				art.silhouette = not known
-				var tall := id in ["srnka", "jednorozec"]
+				var tall: bool = id in ["srnka", "jednorozec"]
 				art.position = pos + Vector2(CARD.x / 2 - (10 if tall else 0), 100 if tall else 85)
 				art.scale = Vector2(0.85, 0.85) if tall else Vector2(1.1, 1.1)
 				_art_root.add_child(art)
