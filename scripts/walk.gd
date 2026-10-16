@@ -3,6 +3,7 @@ extends Node2D
 ## Dítě koníka vede (pomaleji, přes potůček jen po mostku) nebo na něm jede.
 
 const PonyArt := preload("res://scripts/pony/pony_art.gd")
+const KidArt := preload("res://scripts/kid_art.gd")
 const WORLD := Rect2(0, 0, 3000, 2000)
 const STREAM_X := 1600.0
 const STREAM_HALF_WIDTH := 70.0
@@ -12,6 +13,7 @@ const RIDE_SPEED := 420.0
 const ITEM_NAMES := {"apple": "jablko", "flower": "kytičku", "horseshoe": "podkovu"}
 
 var pony: Node2D
+var kid: Node2D
 var riding := false
 var target := Vector2.ZERO
 var moving := false
@@ -44,6 +46,11 @@ func _ready() -> void:
 	pony.scale = Vector2(0.8, 0.8)
 	add_child(pony)
 	target = pony.position
+
+	kid = KidArt.new()
+	kid.scale = Vector2(0.9, 0.9)
+	add_child(kid)
+	kid.position = _kid_spot()
 
 	_camera = Camera2D.new()
 	_camera.limit_left = int(WORLD.position.x)
@@ -89,6 +96,7 @@ func _build_ui() -> void:
 func _toggle_ride() -> void:
 	riding = not riding
 	pony.rider = riding
+	kid.visible = not riding
 	_ride_button.text = "Sesednout" if riding else "Nasednout"
 	_say("Hop, jedeme! Teď přebrodíš i potůček." if riding else "Vedeš koníka. Přes potůček jen po mostku.")
 
@@ -125,8 +133,25 @@ func _process(delta: float) -> void:
 				if absf(to_target.x) > 2.0:
 					pony.facing = signf(to_target.x)
 				pony.position = next
+	_update_kid(delta)
 	_pick_items()
 	queue_redraw()
+
+
+## Dítě jde vedle koníka, kousek před ním, s vodítkem u hlavy.
+func _kid_spot() -> Vector2:
+	return pony.position + Vector2(pony.facing * 45.0, 48.0)
+
+
+func _update_kid(delta: float) -> void:
+	if riding:
+		return
+	var spot := _kid_spot()
+	var before := kid.position
+	kid.position = kid.position.lerp(spot, minf(1.0, delta * 8.0))
+	kid.walking = moving or before.distance_to(kid.position) > 0.5
+	kid.facing = pony.facing
+	kid.rope_target = pony.position + Vector2(pony.facing * 70.0, -30.0)
 
 
 func _pick_items() -> void:
