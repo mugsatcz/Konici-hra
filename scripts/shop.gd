@@ -46,7 +46,7 @@ func _ready() -> void:
 
 	var back := UiStyle.big_button("Zpět", Color("e0a526"))
 	back.position = Vector2(1060, 620)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+	back.pressed.connect(func(): Scenes.go("res://scenes/stable.tscn"))
 	ui.add_child(back)
 	_refresh()
 

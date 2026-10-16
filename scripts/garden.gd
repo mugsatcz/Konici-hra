@@ -25,7 +25,7 @@ func _ready() -> void:
 	ui.add_child(_hint)
 	var back := UiStyle.big_button("Do stáje", Color("e0a526"), Vector2(220, 80))
 	back.position = Vector2(1030, 620)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+	back.pressed.connect(func(): Scenes.go("res://scenes/stable.tscn"))
 	ui.add_child(back)
 
 
@@ -93,7 +93,7 @@ func _draw() -> void:
 	draw_circle(Vector2(140, 330), 60, Color("7a5030"))
 	for i in mini(GameState.manure, 8):
 		draw_circle(Vector2(100 + (i % 4) * 26, 300 + (i / 4) * 26), 10, Color("5a3a1e"))
-	draw_string(ThemeDB.fallback_font, Vector2(80, 500), "Hnojiště", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("4a2c1a"))
+	draw_string(UiStyle.FONT, Vector2(80, 500), "Hnojiště", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("4a2c1a"))
 	# Záhonky
 	for i in GameState.GARDEN_BEDS:
 		var r := _bed_rect(i)
@@ -115,9 +115,9 @@ func _draw() -> void:
 			draw_line(p + Vector2(0, -5), p + Vector2(0, -8 - leaf), Color("4cbb47"), 6)
 			draw_line(p + Vector2(0, -5), p + Vector2(10, -5 - leaf), Color("3c9a3c"), 6)
 		if stage == "thirsty":
-			draw_string(ThemeDB.fallback_font, r.position + Vector2(70, 40), "Zalij mě!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color.WHITE)
+			draw_string(UiStyle.FONT, r.position + Vector2(70, 40), "Zalij mě!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color.WHITE)
 		elif stage == "ready":
-			draw_string(ThemeDB.fallback_font, r.position + Vector2(60, 40), "Sklidit!", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("ffe066"))
+			draw_string(UiStyle.FONT, r.position + Vector2(60, 40), "Sklidit!", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("ffe066"))
 		else:
 			draw_rect(Rect2(r.position + Vector2(20, 18), Vector2(r.size.x - 40, 12)), Color(1, 1, 1, 0.4))
 			draw_rect(Rect2(r.position + Vector2(20, 18), Vector2((r.size.x - 40) * growth, 12)), Color("8ee04f"))

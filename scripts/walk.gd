@@ -41,6 +41,7 @@ var _found := 0
 var _celebrate := 0.0
 var _was_in_stream := false
 var _idle := 0.0
+var _popups: Array = []  # [pozice, text, barva, zbývá]
 
 
 func _ready() -> void:
@@ -175,13 +176,13 @@ func _build_ui() -> void:
 	buttons.add_child(_drink_button)
 
 	var map := UiStyle.big_button("Mapa", Color("e0a526"))
-	map.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/world_map.tscn"))
+	map.pressed.connect(func(): Scenes.go("res://scenes/world_map.tscn"))
 	buttons.add_child(map)
 
 	var home := UiStyle.big_button("Domů", Color("5cb85c"))
 	home.pressed.connect(func():
 		GameState.after_walk()
-		get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+		Scenes.go("res://scenes/stable.tscn"))
 	buttons.add_child(home)
 
 
@@ -193,6 +194,7 @@ func _quest_event(kind: String, detail := "") -> void:
 	if quest.record(kind, detail):
 		GameState.add_star()
 		GameState.add_item("horseshoe", 2)
+		_popup(pony.position + Vector2(0, -120), "★ +1  podkovy +2", Color("ffd84d"))
 		Audio.play("quest", 0.0)
 		_celebrate = 2.0
 		_say("Úkol splněn! Máš hvězdu a 2 podkovy.")
@@ -273,6 +275,7 @@ func _search_bush(bush: Dictionary) -> void:
 			var item: String = ["apple", "flower", "horseshoe"][randi() % 3]
 			GameState.add_item(item)
 			Audio.play("pickup")
+			_popup(bush.pos + Vector2(0, -40), "+1 " + ITEM_NAMES[item], Color("fff3a0"))
 			_say("V keříku bylo schované: %s!" % ITEM_NAMES[item])
 		"animal":
 			var kind: String = area.animals[randi() % area.animals.size()]
@@ -359,7 +362,15 @@ func _process(delta: float) -> void:
 	for bush in bushes:
 		bush.shake = maxf(0.0, bush.shake - delta)
 	_celebrate = maxf(0.0, _celebrate - delta)
+	for p in _popups:
+		p[3] -= delta
+		p[0] += Vector2(0, -50) * delta
+	_popups = _popups.filter(func(p): return p[3] > 0.0)
 	queue_redraw()
+
+
+func _popup(pos: Vector2, text: String, color: Color) -> void:
+	_popups.append([pos, text, color, 1.4])
 
 
 ## Dítě jde vedle koníka, u jeho ramene, s vodítkem u hlavy.
@@ -375,7 +386,7 @@ func _update_kid(delta: float) -> void:
 	kid.position = kid.position.lerp(spot, minf(1.0, delta * 8.0))
 	kid.walking = moving or before.distance_to(kid.position) > 0.5
 	kid.facing = pony.facing
-	kid.rope_target = pony.position + Vector2(pony.facing * 70.0, -30.0)
+	kid.rope_target = pony.position + Vector2(pony.facing * 78.0, -50.0)
 
 
 func _pick_items() -> void:
@@ -384,6 +395,7 @@ func _pick_items() -> void:
 			items.erase(item)
 			GameState.add_item(item[1])
 			Audio.play("pickup")
+			_popup(item[0], "+1 " + ITEM_NAMES[item[1]], Color("fff3a0"))
 			_found += 1
 			_say("Hurá, %s! (%d)" % [ITEM_NAMES[item[1]], _found])
 			_quest_event("collect", item[1])
@@ -416,7 +428,14 @@ func _draw() -> void:
 	draw_rect(WORLD, ground)
 	for i in 220:
 		var p := Vector2(float((i * 137) % 3000), float((i * 89) % 2000))
-		draw_circle(p, 18, ground.darkened(0.08))
+		draw_circle(p, 22, ground.darkened(0.05))
+	# Trsy trávy
+	for i in 260:
+		var p := Vector2(float((i * 263 + 30) % 3000), float((i * 151 + 70) % 2000))
+		var g := ground.darkened(0.22)
+		draw_line(p, p + Vector2(-6, -12), g, 3)
+		draw_line(p, p + Vector2(0, -15), g, 3)
+		draw_line(p, p + Vector2(6, -12), g, 3)
 	# Drobné kytičky v trávě
 	for i in 90:
 		var p := Vector2(float((i * 311 + 50) % 3000), float((i * 173 + 20) % 2000))
@@ -433,22 +452,33 @@ func _draw() -> void:
 	_draw_treasure()
 	for item in items:
 		var p: Vector2 = item[0]
+		var hop := absf(sin(Time.get_ticks_msec() / 500.0 + p.x)) * -4.0
+		p += Vector2(0, hop)
+		DrawKit.ellipse(self, item[0] + Vector2(0, 18), 14, 4, Color(0, 0, 0, 0.15), 0, 0)
 		match item[1]:
 			"apple":
-				draw_circle(p, 16, Color("e0413a"))
-				draw_line(p + Vector2(0, -14), p + Vector2(4, -24), Color("6b3f22"), 3)
+				draw_line(p + Vector2(0, -12), p + Vector2(4, -24), DrawKit.OUTLINE, 4)
+				DrawKit.ellipse(self, p, 16, 15, Color("e0413a"), 0, 3)
+				DrawKit.ellipse(self, p + Vector2(10, -20), 8, 4, Color("5cb85c"), -0.5, 2)
+				draw_circle(p + Vector2(-6, -6), 4, Color(1, 1, 1, 0.6))
 			"flower":
-				for a in 5:
-					draw_circle(p + Vector2.from_angle(a * TAU / 5) * 12, 9, Color("ff7fc4"))
-				draw_circle(p, 8, Color("ffe066"))
+				DrawKit.blob(self, [[p + Vector2.from_angle(0.0) * 12, 9.0], [p + Vector2.from_angle(TAU / 5) * 12, 9.0], [p + Vector2.from_angle(2 * TAU / 5) * 12, 9.0], [p + Vector2.from_angle(3 * TAU / 5) * 12, 9.0], [p + Vector2.from_angle(4 * TAU / 5) * 12, 9.0]], Color("ff7fc4"), 3)
+				DrawKit.ellipse(self, p, 7, 7, Color("ffe066"), 0, 2)
 			"horseshoe":
-				draw_arc(p, 16, 0.3, PI - 0.3 + PI, 12, Color("9aa5b1"), 8)
+				draw_arc(p, 16, 0.3, PI - 0.3 + PI, 14, DrawKit.OUTLINE, 14)
+				draw_arc(p, 16, 0.3, PI - 0.3 + PI, 14, Color("c9d1da"), 8)
 	for bush in bushes:
 		_draw_bush(bush)
 	for t in trees:
 		_draw_tree(t)
 	if moving:
 		draw_arc(target, 22, 0, TAU, 20, Color(1, 1, 1, 0.8), 4)
+	for p in _popups:
+		var a := minf(1.0, p[3] / 0.4)
+		var c: Color = p[2]
+		c.a = a
+		draw_string_outline(UiStyle.FONT, p[0] + Vector2(-150, 0), p[1], HORIZONTAL_ALIGNMENT_CENTER, 300, 30, 8, Color(0.24, 0.14, 0.09, a))
+		draw_string(UiStyle.FONT, p[0] + Vector2(-150, 0), p[1], HORIZONTAL_ALIGNMENT_CENTER, 300, 30, c)
 	if _celebrate > 0.0:
 		for i in 10:
 			var a := i * TAU / 10.0 + _celebrate * 2.0
@@ -456,37 +486,46 @@ func _draw() -> void:
 
 
 func _draw_tree(t: Vector2) -> void:
+	var sway := sin(Time.get_ticks_msec() / 900.0 + t.x * 0.01) * 2.0
+	DrawKit.ellipse(self, t + Vector2(8, 52), 50, 12, Color(0, 0, 0, 0.14), 0, 0)
 	match area.tree_style:
 		"birch":
-			draw_rect(Rect2(t + Vector2(-8, 0), Vector2(16, 50)), Color("f4f1ea"))
-			draw_line(t + Vector2(-8, 18), t + Vector2(2, 18), Color("333333"), 3)
-			draw_line(t + Vector2(0, 34), t + Vector2(8, 34), Color("333333"), 3)
-			draw_circle(t, 45, Color("8fd14f"))
-			draw_circle(t + Vector2(-18, -14), 28, Color("a6de62"))
+			DrawKit.poly(self, PackedVector2Array([t + Vector2(-8, 0), t + Vector2(8, 0), t + Vector2(10, 52), t + Vector2(-10, 52)]), Color("f4f1ea"), 3)
+			for k in 3:
+				draw_line(t + Vector2(-8 + k * 5, 14 + k * 13), t + Vector2(1 + k * 5, 14 + k * 13), Color("333333"), 3)
+			var c := t + Vector2(sway, -4)
+			DrawKit.blob(self, [[c + Vector2(-22, 0), 28.0], [c + Vector2(20, 4), 26.0], [c + Vector2(0, -22), 30.0]], Color("8fd14f"), 3)
+			DrawKit.blob(self, [[c + Vector2(-10, -24), 14.0], [c + Vector2(-26, -4), 10.0]], Color("b7e57a"), 0)
 		"magic":
-			draw_rect(Rect2(t + Vector2(-10, 10), Vector2(20, 40)), Color("5a3d6b"))
-			draw_circle(t, 55, Color("2f7f78"))
-			draw_circle(t + Vector2(-20, -15), 35, Color("3f9a8f"))
+			DrawKit.poly(self, PackedVector2Array([t + Vector2(-10, 0), t + Vector2(10, 0), t + Vector2(14, 52), t + Vector2(-14, 52)]), Color("5a3d6b"), 3)
+			var c := t + Vector2(sway, -6)
+			DrawKit.blob(self, [[c + Vector2(-28, 4), 32.0], [c + Vector2(26, 6), 30.0], [c + Vector2(0, -26), 36.0]], Color("2f7f78"), 3)
+			DrawKit.blob(self, [[c + Vector2(-14, -30), 16.0], [c + Vector2(-32, 0), 11.0]], Color("4fb3a5"), 0)
 			var glow := 0.6 + 0.4 * sin(Time.get_ticks_msec() / 400.0 + t.x)
-			for f in [Vector2(20, -10), Vector2(-25, 15), Vector2(5, 25)]:
-				draw_circle(t + f, 9, Color(1.0, 0.75, 0.95, glow))
-			draw_circle(t + Vector2(30, 48), 10, Color("b388ff"))
-			draw_rect(Rect2(t + Vector2(27, 48), Vector2(6, 12)), Color("f2e9ff"))
+			for f in [Vector2(20, -10), Vector2(-25, 15), Vector2(5, 20)]:
+				draw_circle(c + f, 12, Color(1.0, 0.75, 0.95, glow * 0.3))
+				draw_circle(c + f, 6, Color(1.0, 0.85, 0.97, glow))
+			DrawKit.capsule(self, t + Vector2(32, 50), t + Vector2(32, 58), 3, Color("f2e9ff"), 2)
+			DrawKit.ellipse(self, t + Vector2(32, 48), 12, 8, Color("b388ff"), 0, 2)
 		_:
-			draw_rect(Rect2(t + Vector2(-10, 10), Vector2(20, 40)), Color("7a4b2a"))
-			draw_circle(t, 55, Color("2f9e44"))
-			draw_circle(t + Vector2(-20, -15), 35, Color("40b856"))
+			DrawKit.poly(self, PackedVector2Array([t + Vector2(-10, 4), t + Vector2(10, 4), t + Vector2(14, 52), t + Vector2(-14, 52)]), Color("8a5a35"), 3)
+			var c := t + Vector2(sway, -6)
+			DrawKit.blob(self, [[c + Vector2(-30, 6), 32.0], [c + Vector2(30, 8), 30.0], [c + Vector2(0, -24), 38.0], [c + Vector2(4, 16), 30.0]], Color("3aa64a"), 3)
+			DrawKit.blob(self, [[c + Vector2(-14, -30), 18.0], [c + Vector2(-34, -2), 12.0]], Color("62c46a"), 0)
+			if int(t.x) % 3 == 0:
+				for a in [Vector2(18, -6), Vector2(-10, 10), Vector2(28, 18)]:
+					DrawKit.ellipse(self, c + a, 6, 6, Color("e0413a"), 0, 2)
 
 
 func _draw_bush(bush: Dictionary) -> void:
 	var p: Vector2 = bush.pos + Vector2(sin(bush.shake * 40.0) * bush.shake * 10.0, 0)
-	var green := Color("3fa34d") if not bush.searched else Color("5fae5a")
-	draw_circle(p + Vector2(-22, 6), 26, green.darkened(0.1))
-	draw_circle(p + Vector2(22, 6), 26, green.darkened(0.1))
-	draw_circle(p + Vector2(0, -10), 32, green)
+	var green := Color("3fa34d") if not bush.searched else Color("6dbb63")
+	DrawKit.ellipse(self, bush.pos + Vector2(0, 30), 50, 10, Color(0, 0, 0, 0.14), 0, 0)
+	DrawKit.blob(self, [[p + Vector2(-24, 8), 24.0], [p + Vector2(24, 8), 24.0], [p + Vector2(0, -10), 30.0]], green, 3)
+	DrawKit.blob(self, [[p + Vector2(-8, -20), 12.0]], green.lightened(0.2), 0)
 	if not bush.searched:
-		for b in [Vector2(-14, -8), Vector2(12, -18), Vector2(20, 6), Vector2(-24, 10)]:
-			draw_circle(p + b, 6, Color("d6336c"))
+		for b in [Vector2(-14, -8), Vector2(12, -18), Vector2(22, 8), Vector2(-26, 10)]:
+			DrawKit.ellipse(self, p + b, 5.5, 5.5, Color("d6336c"), 0, 2)
 
 
 func _draw_treasure() -> void:

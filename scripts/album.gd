@@ -36,7 +36,7 @@ func _ready() -> void:
 
 	var back := UiStyle.big_button("Zpět", Color("e0a526"))
 	back.position = Vector2(1070, 620)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+	back.pressed.connect(func(): Scenes.go("res://scenes/stable.tscn"))
 	ui.add_child(back)
 
 	_ui_root = Control.new()
@@ -75,8 +75,9 @@ func _show(page: int) -> void:
 				var art := AnimalArt.new()
 				art.kind = id
 				art.silhouette = not known
-				art.position = pos + Vector2(CARD.x / 2, 85)
-				art.scale = Vector2(1.2, 1.2)
+				var tall := id in ["srnka", "jednorozec"]
+				art.position = pos + Vector2(CARD.x / 2 - (10 if tall else 0), 100 if tall else 85)
+				art.scale = Vector2(0.85, 0.85) if tall else Vector2(1.1, 1.1)
 				_art_root.add_child(art)
 				_card_label(pos, WorldData.ANIMALS[id] if known else "???", "", known)
 				i += 1
@@ -142,4 +143,4 @@ func _draw() -> void:
 					draw_line(c, c + Vector2.from_angle(a) * 45, Color("ffd84d") if known else Color("c9ced3"), 6)
 				draw_circle(c, 22, Color("ffb84d") if known else Color("aab1b8"))
 		if not known:
-			draw_string(ThemeDB.fallback_font, c + Vector2(-12, 16), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color.WHITE)
+			draw_string(UiStyle.FONT, c + Vector2(-12, 16), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color.WHITE)

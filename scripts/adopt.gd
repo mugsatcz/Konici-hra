@@ -81,7 +81,7 @@ func _ready() -> void:
 
 	var back := UiStyle.big_button("Zpět", Color("e0a526"))
 	back.position = Vector2(1070, 610)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+	back.pressed.connect(func(): Scenes.go("res://scenes/stable.tscn"))
 	ui.add_child(back)
 	_update()
 
@@ -105,7 +105,7 @@ func _adopt() -> void:
 		chosen = WorldData.PONY_NAMES[0]
 	if GameState.adopt(chosen, Color(c[1]), Color(WorldData.MANES[_mane]), c[2]):
 		Audio.play("treasure", 0.0)
-		get_tree().change_scene_to_file("res://scenes/stable.tscn")
+		Scenes.go("res://scenes/stable.tscn")
 	else:
 		Audio.play("boing")
 		UiStyle.bounce(_info)

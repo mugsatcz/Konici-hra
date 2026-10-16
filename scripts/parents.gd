@@ -18,7 +18,7 @@ func _ready() -> void:
 	ui.add_child(title)
 	var back := UiStyle.big_button("Zpět", Color("e0a526"))
 	back.position = Vector2(1070, 620)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+	back.pressed.connect(func(): Scenes.go("res://scenes/main_menu.tscn"))
 	ui.add_child(back)
 
 	_gate = VBoxContainer.new()
@@ -41,7 +41,7 @@ func _ready() -> void:
 				_gate.visible = false
 				_settings.visible = true
 			else:
-				get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+				Scenes.go("res://scenes/main_menu.tscn"))
 		choices.add_child(button)
 
 	_settings = VBoxContainer.new()

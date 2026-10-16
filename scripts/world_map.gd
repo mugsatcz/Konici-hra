@@ -27,7 +27,7 @@ func _ready() -> void:
 
 	var home := UiStyle.big_button("Do stáje", Color("e0a526"), Vector2(220, 80))
 	home.position = Vector2(1036, 620)
-	home.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/stable.tscn"))
+	home.pressed.connect(func(): Scenes.go("res://scenes/stable.tscn"))
 	ui.add_child(home)
 
 	_hint = UiStyle.label("", 28, Color("4a2c1a"))
@@ -42,7 +42,7 @@ func _go(id: String) -> void:
 		UiStyle.bounce(_hint)
 		return
 	GameState.current_area = id
-	get_tree().change_scene_to_file("res://scenes/walk.tscn")
+	Scenes.go("res://scenes/walk.tscn")
 
 
 func _draw() -> void:

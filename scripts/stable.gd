@@ -91,7 +91,7 @@ func _build_ui() -> void:
 		var button := UiStyle.big_button(entry[0], entry[1], Vector2(190, 56))
 		button.add_theme_font_size_override("font_size", 24)
 		var scene_path: String = "res://scenes/%s.tscn" % entry[2]
-		button.pressed.connect(func(): get_tree().change_scene_to_file(scene_path))
+		button.pressed.connect(func(): Scenes.go(scene_path))
 		extras.add_child(button)
 
 	_hint = UiStyle.label("", 28, Color("4a2c1a"))
@@ -140,7 +140,7 @@ func _build_ui() -> void:
 	buttons.add_child(_brush_button)
 
 	var walk := UiStyle.big_button("Na procházku", Color("5cb85c"), Vector2(300, 90))
-	walk.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/world_map.tscn"))
+	walk.pressed.connect(func(): Scenes.go("res://scenes/world_map.tscn"))
 	buttons.add_child(walk)
 
 

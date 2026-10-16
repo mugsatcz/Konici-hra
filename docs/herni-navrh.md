@@ -163,6 +163,8 @@ docs/
 - ☐ Hříbě, počasí ve stáji, hlasový komentář.
 
 ### Fáze 4 – Vyladění a vydání
+- ✅ Kreslený styl s obrysy: koník (mrkání, pohupování hřívy a ocasu), dítě, zvířátka, stromy a keříky.
+- ✅ Oblé písmo Fredoka (SIL OFL), plynulé přechody mezi obrazovkami, vyskakující odměny.
 - Finální grafika a animace, optimalizace výkonu.
 - Google Play: „Designed for Families“, zásady ochrany soukromí, testování.
 

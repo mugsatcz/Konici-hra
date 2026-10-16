@@ -1,6 +1,8 @@
 class_name UiStyle
 ## Společný vzhled velkých dětských tlačítek.
 
+const FONT := preload("res://assets/fonts/Fredoka-SemiBold.ttf")
+
 
 static func big_button(text: String, color: Color, min_size := Vector2(170, 90)) -> Button:
 	var button := Button.new()
