@@ -1,5 +1,5 @@
 extends Node2D
-## Stáj: krmení, napájení, česání a úklid koblížků.
+## Stáj: krmení, napájení, česání a úklid koblížků. Koníků může být víc, šipkami se přepíná.
 
 const PonyArt := preload("res://scripts/pony/pony_art.gd")
 const POOP_SPOTS := [Vector2(420, 560), Vector2(470, 600), Vector2(800, 590), Vector2(860, 555), Vector2(540, 620)]
@@ -15,6 +15,9 @@ var _bars := {}
 var _items_label: Label
 var _hint: Label
 var _brush_button: Button
+var _carrot_button: Button
+var _name_label: Label
+var _switch: HBoxContainer
 var _sparkles: Array = []
 var _brush_sound := 0
 
@@ -28,6 +31,7 @@ func _ready() -> void:
 	Audio.music("stable")
 	GameState.needs_changed.connect(_refresh)
 	GameState.inventory_changed.connect(_refresh)
+	GameState.looks_changed.connect(_refresh)
 	_refresh()
 
 
@@ -39,7 +43,22 @@ func _build_ui() -> void:
 	panel.position = Vector2(24, 20)
 	panel.add_theme_constant_override("separation", 6)
 	ui.add_child(panel)
-	panel.add_child(UiStyle.label(GameState.pony_name, 40, Color.WHITE))
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 12)
+	panel.add_child(name_row)
+	_name_label = UiStyle.label("", 40, Color.WHITE)
+	name_row.add_child(_name_label)
+	_switch = HBoxContainer.new()
+	_switch.add_theme_constant_override("separation", 8)
+	name_row.add_child(_switch)
+	for dir in [-1, 1]:
+		var arrow := UiStyle.big_button("<" if dir < 0 else ">", Color("8a5a35"), Vector2(56, 50))
+		arrow.pressed.connect(func():
+			GameState.select_pony(GameState.current_pony + dir)
+			_brush_button.button_pressed = false
+			Audio.play("neigh")
+			pony.love())
+		_switch.add_child(arrow)
 	for need in NEEDS:
 		var row := HBoxContainer.new()
 		var name_label := UiStyle.label(need[1], 24, Color.WHITE)
@@ -61,26 +80,26 @@ func _build_ui() -> void:
 		_bars[need[0]] = bar
 
 	_items_label = UiStyle.label("", 28, Color.WHITE)
-	_items_label.position = Vector2(800, 24)
+	_items_label.position = Vector2(560, 24)
 	ui.add_child(_items_label)
 
-	var extras := HBoxContainer.new()
-	extras.position = Vector2(860, 66)
-	extras.add_theme_constant_override("separation", 16)
+	var extras := VBoxContainer.new()
+	extras.position = Vector2(1070, 76)
+	extras.add_theme_constant_override("separation", 10)
 	ui.add_child(extras)
-	var album := UiStyle.big_button("Album", Color("3fa9f5"), Vector2(170, 58))
-	album.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/album.tscn"))
-	extras.add_child(album)
-	var shop := UiStyle.big_button("Obchůdek", Color("ff5fa2"), Vector2(200, 58))
-	shop.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/shop.tscn"))
-	extras.add_child(shop)
+	for entry in [["Album", Color("3fa9f5"), "album"], ["Obchůdek", Color("ff5fa2"), "shop"], ["Zahrádka", Color("7cb342"), "garden"], ["Nový koník", Color("e8742a"), "adopt"]]:
+		var button := UiStyle.big_button(entry[0], entry[1], Vector2(190, 56))
+		button.add_theme_font_size_override("font_size", 24)
+		var scene_path: String = "res://scenes/%s.tscn" % entry[2]
+		button.pressed.connect(func(): get_tree().change_scene_to_file(scene_path))
+		extras.add_child(button)
 
 	_hint = UiStyle.label("", 28, Color("4a2c1a"))
 	_hint.position = Vector2(420, 230)
 	ui.add_child(_hint)
 
 	var buttons := HBoxContainer.new()
-	buttons.position = Vector2(110, 610)
+	buttons.position = Vector2(40, 610)
 	buttons.add_theme_constant_override("separation", 22)
 	ui.add_child(buttons)
 
@@ -104,6 +123,15 @@ func _build_ui() -> void:
 		_say("Glo glo glo"))
 	buttons.add_child(water)
 
+	_carrot_button = UiStyle.big_button("Mrkev", Color("f07c1e"))
+	_carrot_button.pressed.connect(func():
+		if GameState.feed_carrot():
+			Audio.play("eat")
+			Audio.play("neigh")
+			pony.love()
+			_say("Mrkvička ze zahrádky! To je dobrota!"))
+	buttons.add_child(_carrot_button)
+
 	_brush_button = UiStyle.big_button("Kartáč", Color("c06fd8"))
 	_brush_button.toggle_mode = true
 	_brush_button.toggled.connect(func(on):
@@ -121,7 +149,10 @@ func _refresh() -> void:
 		_bars[need].value = GameState.needs[need]
 	pony.mood = GameState.happiness()
 	var inv := GameState.inventory
-	_items_label.text = "Jablka %d  Kytky %d  Podkovy %d  ★ %d" % [inv.apple, inv.flower, inv.horseshoe, GameState.stars]
+	_items_label.text = "Jablka %d  Kytky %d  Podkovy %d  Mrkve %d  ★ %d" % [inv.apple, inv.flower, inv.horseshoe, inv.get("carrot", 0), GameState.stars]
+	_name_label.text = GameState.pony_name
+	_switch.visible = GameState.ponies.size() > 1
+	_carrot_button.visible = inv.get("carrot", 0) > 0
 	queue_redraw()
 
 
@@ -138,7 +169,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not brushing and pos.distance_to(pony.position + Vector2(20, -60)) < 110:
 			pony.love()
 			Audio.play("neigh")
-			_say("%s tě má ráda!" % GameState.pony_name)
+			_say("%s se raduje!" % GameState.pony_name)
 			return
 		_try_clean(pos)
 	elif event is InputEventScreenDrag:
@@ -177,14 +208,14 @@ func _draw() -> void:
 	for x in range(0, int(size.x), 80):
 		draw_line(Vector2(x, 0), Vector2(x, 520), Color("9a6038"), 4)
 	# Okno s oblohou
-	draw_rect(Rect2(880, 130, 220, 160), Color("8fd3ff"))
-	draw_circle(Vector2(1050, 170), 25, Color("ffe066"))
-	draw_rect(Rect2(880, 130, 220, 160), Color("6b3f22"), false, 10)
-	draw_line(Vector2(990, 130), Vector2(990, 290), Color("6b3f22"), 8)
+	draw_rect(Rect2(820, 130, 220, 160), Color("8fd3ff"))
+	draw_circle(Vector2(990, 170), 25, Color("ffe066"))
+	draw_rect(Rect2(820, 130, 220, 160), Color("6b3f22"), false, 10)
+	draw_line(Vector2(930, 130), Vector2(930, 290), Color("6b3f22"), 8)
 	if GameState.wears("window_flowers"):
-		draw_rect(Rect2(870, 290, 240, 30), Color("8a5a35"))
+		draw_rect(Rect2(810, 290, 240, 30), Color("8a5a35"))
 		for i in 7:
-			var f := Vector2(890 + i * 33, 282)
+			var f := Vector2(830 + i * 33, 282)
 			draw_line(f, f + Vector2(0, 12), Color("3c9a3c"), 4)
 			draw_circle(f, 11, [Color("ff7fc4"), Color("ffe066"), Color("ff5f5f")][i % 3])
 	if GameState.wears("lantern"):

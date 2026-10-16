@@ -1,5 +1,5 @@
 extends Node
-## Stav celé hry: potřeby koníka, nasbírané věci a ukládání.
+## Stav celé hry: koníci a jejich potřeby, nasbírané věci, zahrádka a ukládání.
 
 signal needs_changed
 signal inventory_changed
@@ -11,12 +11,34 @@ const DECAY_PER_MINUTE := {"hunger": 4.0, "thirst": 5.0, "grooming": 2.0}
 ## Mezi seancemi potřeby neklesnou pod tuto hodnotu (nikdo se nemá vrátit ke smutnému koníkovi).
 const OFFLINE_FLOOR := 40.0
 
-var pony_name := "Jiskra"
+const MAX_PONIES := 4
+const ADOPT_STARS := 3
+const GARDEN_BEDS := 6
+## Za kolik sekund od zalití vyroste mrkev.
+const GROW_SECONDS := 120.0
+
+## Každý koník: jméno, barva srsti a hřívy, strakatost, potřeby a koblížky v boxu.
+var ponies: Array = [_new_pony("Jiskra", "c8834a", "f2d16b", false)]
+var current_pony := 0
+## Zkratky na právě vybraného koníka (většina hry pracuje s ním).
+var pony_name: String:
+	get: return ponies[current_pony].name
+	set(value): ponies[current_pony].name = value
 ## 100 = vše v pořádku, 0 = koník moc potřebuje pomoc.
-var needs := {"hunger": 80.0, "thirst": 80.0, "grooming": 80.0}
+var needs: Dictionary:
+	get: return ponies[current_pony].needs
+	set(value): ponies[current_pony].needs = value
 ## Počet koblížků v boxu, které je potřeba uklidit.
-var poops := 0
-var inventory := {"apple": 0, "flower": 0, "horseshoe": 0}
+var poops: int:
+	get: return ponies[current_pony].poops
+	set(value): ponies[current_pony].poops = value
+var inventory := {"apple": 0, "flower": 0, "horseshoe": 0, "carrot": 0}
+## Uklizený hnůj na hnojišti; hnojí se jím zahrádka.
+var manure := 0
+## Záhonky: {"state": "empty"|"planted", "watered_at": čas zalití nebo 0}.
+var garden: Array = []
+## Rodičovské nastavení: 0.5 = potřeby klesají pomaleji.
+var decay_scale := 1.0
 ## Počet dokončených procházek (odemyká nová místa).
 var walks := 0
 ## Objevená zvířátka a místa (album).
@@ -34,13 +56,15 @@ var _save_timer := 0.0
 
 
 func _ready() -> void:
+	_reset_garden()
 	load_game()
 	Audio.enabled = sound_on
 
 
 func _process(delta: float) -> void:
-	for need in DECAY_PER_MINUTE:
-		needs[need] = maxf(0.0, needs[need] - DECAY_PER_MINUTE[need] * delta / 60.0)
+	for pony in ponies:
+		for need in DECAY_PER_MINUTE:
+			pony.needs[need] = maxf(0.0, pony.needs[need] - DECAY_PER_MINUTE[need] * decay_scale * delta / 60.0)
 	needs_changed.emit()
 	_save_timer += delta
 	if _save_timer > 10.0:
@@ -80,6 +104,8 @@ func brush(amount := 4.0) -> void:
 
 
 func clean_poop() -> void:
+	if poops > 0:
+		manure += 1
 	poops = maxi(0, poops - 1)
 	needs_changed.emit()
 
@@ -101,9 +127,12 @@ func after_walk() -> void:
 
 func save_game() -> void:
 	var data := {
-		"pony_name": pony_name,
-		"needs": needs,
-		"poops": poops,
+		"version": 2,
+		"ponies": ponies,
+		"current_pony": current_pony,
+		"manure": manure,
+		"garden": garden,
+		"decay_scale": decay_scale,
 		"inventory": inventory,
 		"walks": walks,
 		"discovered": discovered,
@@ -123,10 +152,29 @@ func load_game() -> void:
 	var data = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if typeof(data) != TYPE_DICTIONARY:
 		return
-	pony_name = data.get("pony_name", pony_name)
-	for need in needs:
-		needs[need] = maxf(float(data.get("needs", {}).get(need, needs[need])), OFFLINE_FLOOR)
-	poops = int(data.get("poops", 0))
+	if data.has("ponies"):
+		ponies = []
+		for p in data.ponies:
+			var pony := _new_pony(str(p.get("name", "Jiskra")), str(p.get("coat", "c8834a")), str(p.get("mane", "f2d16b")), bool(p.get("spots", false)))
+			for need in pony.needs:
+				pony.needs[need] = maxf(float(p.get("needs", {}).get(need, 80.0)), OFFLINE_FLOOR)
+			pony.poops = int(p.get("poops", 0))
+			ponies.append(pony)
+		if ponies.is_empty():
+			ponies = [_new_pony("Jiskra", "c8834a", "f2d16b", false)]
+	else:
+		# Uložená hra z doby, kdy byl jen jeden koník.
+		var pony := _new_pony(str(data.get("pony_name", "Jiskra")), "c8834a", "f2d16b", false)
+		for need in pony.needs:
+			pony.needs[need] = maxf(float(data.get("needs", {}).get(need, 80.0)), OFFLINE_FLOOR)
+		pony.poops = int(data.get("poops", 0))
+		ponies = [pony]
+	current_pony = clampi(int(data.get("current_pony", 0)), 0, ponies.size() - 1)
+	manure = int(data.get("manure", 0))
+	decay_scale = float(data.get("decay_scale", 1.0))
+	var beds: Array = data.get("garden", [])
+	for i in mini(beds.size(), GARDEN_BEDS):
+		garden[i] = {"state": str(beds[i].get("state", "empty")), "watered_at": float(beds[i].get("watered_at", 0.0))}
 	for item in data.get("inventory", {}):
 		inventory[item] = int(data.inventory[item])
 	walks = int(data.get("walks", 0))
@@ -138,10 +186,12 @@ func load_game() -> void:
 
 
 func reset() -> void:
-	pony_name = "Jiskra"
-	needs = {"hunger": 80.0, "thirst": 80.0, "grooming": 80.0}
-	poops = 0
-	inventory = {"apple": 0, "flower": 0, "horseshoe": 0}
+	ponies = [_new_pony("Jiskra", "c8834a", "f2d16b", false)]
+	current_pony = 0
+	inventory = {"apple": 0, "flower": 0, "horseshoe": 0, "carrot": 0}
+	manure = 0
+	decay_scale = 1.0
+	_reset_garden()
 	walks = 0
 	discovered = []
 	owned = []
@@ -222,4 +272,112 @@ func add_star() -> void:
 func set_sound(on: bool) -> void:
 	sound_on = on
 	Audio.enabled = on
+	save_game()
+
+
+
+static func _new_pony(name: String, coat: String, mane: String, spots: bool) -> Dictionary:
+	return {
+		"name": name,
+		"coat": coat,
+		"mane": mane,
+		"spots": spots,
+		"needs": {"hunger": 80.0, "thirst": 80.0, "grooming": 80.0},
+		"poops": 0,
+	}
+
+
+func current() -> Dictionary:
+	return ponies[current_pony]
+
+
+func select_pony(index: int) -> void:
+	current_pony = posmod(index, ponies.size())
+	needs_changed.emit()
+	looks_changed.emit()
+
+
+func can_adopt() -> bool:
+	return ponies.size() < MAX_PONIES and stars >= ADOPT_STARS
+
+
+func adopt(name: String, coat: Color, mane: Color, spots: bool) -> bool:
+	if not can_adopt():
+		return false
+	stars -= ADOPT_STARS
+	ponies.append(_new_pony(name, coat.to_html(false), mane.to_html(false), spots))
+	current_pony = ponies.size() - 1
+	save_game()
+	inventory_changed.emit()
+	needs_changed.emit()
+	looks_changed.emit()
+	return true
+
+
+## Mrkev zasytí víc než seno a koník z ní má velkou radost.
+func feed_carrot() -> bool:
+	if inventory.get("carrot", 0) <= 0:
+		return false
+	inventory.carrot -= 1
+	needs.hunger = minf(100.0, needs.hunger + 40.0)
+	needs.grooming = minf(100.0, needs.grooming + 5.0)
+	inventory_changed.emit()
+	needs_changed.emit()
+	return true
+
+
+func _reset_garden() -> void:
+	garden = []
+	for i in GARDEN_BEDS:
+		garden.append({"state": "empty", "watered_at": 0.0})
+
+
+## Fáze záhonku: "empty", "thirsty" (zasazeno, nezalito), "growing", "ready".
+func bed_stage(i: int, now := -1.0) -> String:
+	var bed: Dictionary = garden[i]
+	if bed.state == "empty":
+		return "empty"
+	if bed.watered_at <= 0.0:
+		return "thirsty"
+	if now < 0.0:
+		now = Time.get_unix_time_from_system()
+	return "ready" if now - bed.watered_at >= GROW_SECONDS else "growing"
+
+
+## 0–1, jak daleko je mrkev v růstu.
+func bed_growth(i: int) -> float:
+	var bed: Dictionary = garden[i]
+	if bed.watered_at <= 0.0:
+		return 0.0
+	return clampf((Time.get_unix_time_from_system() - bed.watered_at) / GROW_SECONDS, 0.0, 1.0)
+
+
+func plant(i: int) -> bool:
+	if garden[i].state != "empty" or manure <= 0:
+		return false
+	manure -= 1
+	garden[i] = {"state": "planted", "watered_at": 0.0}
+	save_game()
+	return true
+
+
+func water_bed(i: int) -> bool:
+	if bed_stage(i) != "thirsty":
+		return false
+	garden[i].watered_at = Time.get_unix_time_from_system()
+	save_game()
+	return true
+
+
+func harvest(i: int) -> bool:
+	if bed_stage(i) != "ready":
+		return false
+	garden[i] = {"state": "empty", "watered_at": 0.0}
+	add_item("carrot", 2)
+	save_game()
+	return true
+
+
+func set_decay_scale(value: float) -> void:
+	decay_scale = value
 	save_game()

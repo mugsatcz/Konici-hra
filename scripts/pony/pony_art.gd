@@ -3,6 +3,9 @@ extends Node2D
 
 @export var coat_color := Color("c8834a")
 @export var mane_color := Color("f2d16b")
+@export var spots := false
+## Když je true, bere barvy z právě vybraného koníka ve hře.
+@export var use_current := true
 ## 0–100, ovlivňuje výraz koníka.
 var mood := 100.0:
 	set(value):
@@ -25,9 +28,17 @@ var _hearts := 0.0
 
 
 func _process(delta: float) -> void:
+	if use_current:
+		apply(GameState.current())
 	_t += delta
 	_hearts = maxf(0.0, _hearts - delta)
 	queue_redraw()
+
+
+func apply(pony: Dictionary) -> void:
+	coat_color = Color(pony.coat)
+	mane_color = Color(pony.mane)
+	spots = pony.spots
 
 
 ## Nad koníkem vyletí srdíčka (pohlazení, radost).
@@ -56,6 +67,9 @@ func _draw() -> void:
 	draw_set_transform(Vector2(0, -5 + bob), 0, Vector2(1.0, 0.6))
 	draw_circle(Vector2.ZERO, 62, coat_color)
 	draw_set_transform(Vector2.ZERO)
+	if spots:
+		for sp in [[Vector2(-30, -15), 20.0], [Vector2(10, 5), 16.0], [Vector2(28, -25), 13.0], [Vector2(-45, 10), 11.0]]:
+			draw_circle(sp[0] + Vector2(0, bob), sp[1], Color("fbf7f0"))
 	if GameState.wears("star_blanket"):
 		draw_rect(Rect2(-35, -38 + bob, 60, 44), Color("27306b"))
 		for sp in [Vector2(-25, -28), Vector2(-5, -12), Vector2(12, -30), Vector2(-20, -2), Vector2(15, -6)]:

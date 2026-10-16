@@ -11,7 +11,9 @@ Dětská hra pro Android (6–11 let) o péči o koníčky a procházkách barev
 
 Zatím je ve hře:
 
-- **Stáj:** krmení, voda, česání, úklid koblížků; album objevů a obchůdek s ozdobami.
+- **Stáj:** krmení, voda, mrkev, česání, úklid koblížků; až 4 koníci, každý se svým jménem a barvou.
+- **Zahrádka:** z uklizeného hnoje vyrostou mrkve.
+- **Album objevů, obchůdek s ozdobami a nastavení pro rodiče.**
 - **Mapa světa:** louka s potůčkem, březový lesík, rybníček a Kouzelný les (další místa se odemykají procházkami).
 - **Procházka shora:** dítě koníka vede (jde vedle něj s vodítkem) nebo na něm jede, sbírá jablka, kytičky a podkovy a potkává zvířátka.
 - **Objevy:** keříky s překvapením, ukryté poklady, úkoly, déšť s duhou, světlušky, Kouzelný les s jednorožcem.

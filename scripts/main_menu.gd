@@ -32,6 +32,12 @@ func _ready() -> void:
 		GameState.set_sound(not GameState.sound_on)
 		label_sound.call())
 	ui.add_child(sound)
+
+	var parents := UiStyle.big_button("Pro rodiče", Color("8a8f99"), Vector2(200, 70))
+	parents.add_theme_font_size_override("font_size", 24)
+	parents.position = Vector2(24, 630)
+	parents.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/parents.tscn"))
+	ui.add_child(parents)
 	Audio.music("stable")
 
 

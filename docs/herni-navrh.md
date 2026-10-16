@@ -156,9 +156,11 @@ docs/
 - ✅ Album se třemi záložkami: zvířátka, místa a poklady, zážitky.
 
 ### Fáze 3 – Více koníků a obsahu
-- Adopce dalších koníků (barvy, plemena, jméno), hříbě.
-- Zahrádka z hnojiště, počasí, další oblasti.
-- Rodičovské menu, hlasový komentář.
+- ✅ Adopce dalších koníků za 3 hvězdy (až 4 koníci): srst (hnědák, ryzák, bělouš, vraník, plavák, strakáč), barva hřívy, jméno.
+- ✅ Každý koník má vlastní potřeby; ve stáji se mezi nimi přepíná šipkami.
+- ✅ Zahrádka: hnůj z úklidu pohnojí záhonek, mrkev se zalije a za 2 minuty se sklízí; mrkví se koníci krmí.
+- ✅ Rodičovské menu za příkladem z násobilky: zvuk, pomalejší potřeby, smazání hry.
+- ☐ Hříbě, počasí ve stáji, hlasový komentář.
 
 ### Fáze 4 – Vyladění a vydání
 - Finální grafika a animace, optimalizace výkonu.

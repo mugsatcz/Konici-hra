@@ -2,7 +2,7 @@ extends SceneTree
 ## Rychlý test: načte všechny scény, chvíli je nechá běžet a ověří herní logiku.
 ## Spuštění: godot --headless --script res://tests/smoke_test.gd
 
-const SCENES := ["res://scenes/main_menu.tscn", "res://scenes/stable.tscn", "res://scenes/world_map.tscn", "res://scenes/album.tscn", "res://scenes/shop.tscn"]
+const SCENES := ["res://scenes/main_menu.tscn", "res://scenes/stable.tscn", "res://scenes/world_map.tscn", "res://scenes/album.tscn", "res://scenes/shop.tscn", "res://scenes/adopt.tscn", "res://scenes/garden.tscn", "res://scenes/parents.tscn"]
 
 
 func _initialize() -> void:
@@ -79,6 +79,40 @@ func _run() -> void:
 		failures += _check(WorldData.TREASURES.has(area) and WorldData.TREASURE_REWARDS.has(WorldData.TREASURES[area].reward), "poklad v místě " + area)
 	for id in WorldData.ANIMALS:
 		failures += _check(WorldData.ANIMAL_FACTS.has(id), "zvířátko %s má zajímavost" % id)
+
+	# Víc koníků
+	state.reset()
+	failures += _check(not state.can_adopt(), "bez hvězd adopce nejde")
+	state.stars = 3
+	failures += _check(state.adopt("Hvězdička", Color.WHITE, Color.PINK, true) and state.ponies.size() == 2 and state.stars == 0, "adopce za 3 hvězdy")
+	failures += _check(state.pony_name == "Hvězdička", "nový koník je vybraný")
+	state.needs.hunger = 10.0
+	state.select_pony(0)
+	failures += _check(state.pony_name == "Jiskra" and state.needs.hunger > 10.0, "každý koník má vlastní potřeby")
+	state.save_game()
+	state.ponies = []
+	state.load_game()
+	failures += _check(state.ponies.size() == 2 and state.ponies[1].spots, "koníci se uloží i načtou")
+
+	# Zahrádka
+	failures += _check(not state.plant(0), "bez hnoje se nesází")
+	state.poops = 1
+	state.clean_poop()
+	failures += _check(state.manure == 1 and state.plant(0), "hnůj z úklidu pohnojí záhonek")
+	failures += _check(state.bed_stage(0) == "thirsty" and state.water_bed(0), "záhonek jde zalít")
+	failures += _check(state.bed_stage(0) == "growing" and not state.harvest(0), "rostoucí mrkev nejde sklidit")
+	state.garden[0].watered_at -= state.GROW_SECONDS + 1.0
+	failures += _check(state.harvest(0) and state.inventory.carrot == 2, "sklizeň dá 2 mrkve")
+	var hunger_before: float = state.needs.hunger
+	failures += _check(state.feed_carrot() and state.needs.hunger > hunger_before and state.inventory.carrot == 1, "krmení mrkví")
+
+	# Stará uložená hra s jedním koníkem
+	var f := FileAccess.open(state.SAVE_PATH, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"pony_name": "Stará", "needs": {"hunger": 90}, "poops": 2, "inventory": {"apple": 4}}))
+	f.close()
+	state.load_game()
+	failures += _check(state.ponies.size() == 1 and state.pony_name == "Stará" and state.poops == 2 and state.inventory.apple == 4, "převod staré uložené hry")
+	state.reset()
 	state.reset()
 
 	print("Hotovo, chyb: ", failures)

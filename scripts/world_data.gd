@@ -106,7 +106,20 @@ const ITEM_FORMS := {
 	"apple": ["jablko", "jablka", "jablek"],
 	"flower": ["kytičku", "kytičky", "kytiček"],
 	"horseshoe": ["podkovu", "podkovy", "podkov"],
+	"carrot": ["mrkev", "mrkve", "mrkví"],
 }
+
+## Barvy pro adopci nového koníka.
+const COATS := [
+	["Hnědák", "c8834a", false],
+	["Ryzák", "d0602e", false],
+	["Bělouš", "eeeae4", false],
+	["Vraník", "4a3a36", false],
+	["Plavák", "e8c06a", false],
+	["Strakáč", "8a5a3c", true],
+]
+const MANES := ["f2d16b", "3a2a20", "ffffff", "ff8fc8", "b58cff", "6fc3ff"]
+const PONY_NAMES := ["Hvězdička", "Šimon", "Lucinka", "Blesk", "Karamelka", "Fanda", "Mráček", "Bonbonek", "Duhovka", "Uhlík", "Sněženka", "Ořech"]
 
 ## Ozdoby: cena v nasbíraných věcech, kde se ukazují.
 const SHOP := {
