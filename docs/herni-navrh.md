@@ -1,8 +1,8 @@
-# Koníčci – herní návrh (v0.1)
+# Koníčci – herní návrh (v0.2)
 
 Dětská hra pro Android o péči o koníčky: stáj, krmení, napájení, úklid a procházky barevným světem s lesíky a potůčky.
 
-> Stav: plánovací fáze. Otevřené otázky jsou na konci dokumentu.
+> Stav: plánovací fáze, základní rozhodnutí potvrzena (viz kapitola 10).
 
 ## 1. Vize v jedné větě
 
@@ -10,11 +10,11 @@ Dětská hra pro Android o péči o koníčky: stáj, krmení, napájení, úkli
 
 ## 2. Cílová skupina a principy
 
-Předpoklad: děti cca 4–8 let (viz otázky).
+Děti **6–11 let**. Hra je jen v **češtině**.
 
 - **Žádný stres, žádné prohry.** Koník nikdy neumře ani neonemocní vážně. Když je hladový nebo stáj špinavá, je jen smutnější a „prosí“, ale nic se nezkazí natrvalo.
 - **Ovládání jedním prstem.** Ťuknutí a táhnutí, velká tlačítka, žádné drobné ikonky.
-- **Minimum textu.** Vše srozumitelné z obrázků, ikon a zvuků; text jen pro rodiče. Hlasový komentář volitelně.
+- **Málo textu, jednoduchá čeština.** Hlavní ovládání srozumitelné z ikon a zvuků, krátké texty (jména koníků, album, úkoly) pro děti, které už čtou. Hlasový komentář volitelně pro mladší.
 - **Krátké seance.** Smysluplná hra za 5–10 minut, aby se dala ukončit bez slz.
 - **Bezpečnost.** Offline, bez reklam, bez nákupů v aplikaci, bez sběru dat (kvůli Google Play „Designed for Families“ a klidu rodičů).
 
@@ -49,7 +49,9 @@ Stáj (péče)  ──►  Procházka (objevování)  ──►  Odměny  ──
 
 ### 4.2 Procházka
 
-- Dítě vede koníka **tažením prstu** (koník jde za prstem) nebo ťukáním na místo. Na vyšší úrovni možnost „jízdy“ (rychlejší).
+- **Pohled shora** (top-down, mírně šikmý „2.5D“ styl jako kreslená mapa). Dítě se volně pohybuje po oblasti.
+- Ovládání: virtuální joystick nebo ťuknutí na místo, kam jít.
+- **Dva režimy:** *vodění* (dítě jde vedle koníka, může sbírat věci ze země, hladit, pást) a *jízda* (rychlejší pohyb, přeskakování klád a přebrodění potůčků). Přepínání tlačítkem nasednout/sesednout.
 - Svět je složený z **oblastí** propojených cestičkami: Louka u stáje → Březový lesík → Potůček s mostkem → Rybníček → Kopec s větrným mlýnem → Kouzelný les (odemykatelné).
 - Interakce: přeskočit kládu, přebrodit potůček (šplouchání), napít se z potůčku (splní žízeň), pást se na louce, schovaný zajíček/ježek, motýli, sbírat věci.
 - Počasí a denní doba jako atmosféra (ráno, západ slunce, letní déšť s duhou) – čistě vizuální.
@@ -70,7 +72,7 @@ Stáj (péče)  ──►  Procházka (objevování)  ──►  Odměny  ──
 3. **Stáj – interiér** – boxy s koníky (začátek 1 koník, max. např. 4–6), žlab, kýbl, nářadí na zdi.
 4. **Detail koníka** – hlazení, česání, krmení z ruky, ozdoby.
 5. **Mapa světa** – kreslená mapa oblastí, odemčená místa svítí.
-6. **Procházka** – boční (2D side-scroll) nebo shora (top-down) pohled na oblast (viz otázky).
+6. **Procházka** – pohled shora na oblast, dítě koníka vede nebo na něm jede.
 7. **Obchůdek / Šatník** – výměna nasbíraných věcí za doplňky.
 8. **Album** – sbírka objevů.
 9. **Rodičovské menu** – zvuk, hlas, rychlost potřeb, časový limit hraní, reset.
@@ -88,7 +90,7 @@ Stáj (péče)  ──►  Procházka (objevování)  ──►  Odměny  ──
 - **Paralaxa** ve 2–4 vrstvách pro hloubku na procházkách.
 - **UI:** velké kulaté ikony, vše animované při dotyku (pružení, jiskřičky).
 - **Zvuk:** hravá akustická hudba (ukulele, xylofon, flétna), ržání, dupání, šplouchání, ptáci, vítr. Každá akce má zvukovou odezvu.
-- **Zdroje grafiky:** kombinace vlastní tvorby, licencovaných assetů (např. itch.io, Kenney CC0 jako placeholder) a případně AI-asistovaných konceptů s ručním dotažením – rozhodne se podle otázky č. 4.
+- **Zdroje grafiky:** Godot grafiku nekreslí, je to jen engine. Pro začátek použijeme jednoduché zástupné tvary a volné CC0 sady (např. Kenney), ve fázi 4 je nahradíme finální kreslenou grafikou (vlastní tvorba, zakoupená sada nebo AI koncepty s ručním dotažením). Kód je napsaný tak, aby výměna grafiky nevyžadovala změny logiky.
 
 ## 8. Technologie (doporučení)
 
@@ -125,8 +127,9 @@ docs/
 ## 9. Plán vývoje (roadmapa)
 
 ### Fáze 0 – Základ (1. milník)
-- Godot projekt, struktura složek, CI build APK.
-- Placeholder grafika, jedna scéna se stájí a jedním koníkem.
+- ✅ Godot projekt, struktura složek, rychlý test.
+- ✅ Zástupná grafika, stáj s jedním koníkem, první procházka shora.
+- ☐ Automatické sestavení APK na GitHubu.
 
 ### Fáze 1 – MVP „Můj první koník“
 - Stáj s 1 koníkem: krmení, napájení, úklid koblížků, hlazení/česání.
@@ -147,14 +150,17 @@ docs/
 
 ### Fáze 4 – Vyladění a vydání
 - Finální grafika a animace, optimalizace výkonu.
-- Lokalizace (CZ, případně EN).
 - Google Play: „Designed for Families“, zásady ochrany soukromí, testování.
 
-## 10. Otevřené otázky
+## 10. Rozhodnutí a otevřené otázky
 
-1. **Věk dítěte** – pro kolik let hru děláme (např. 4–6 nebo 7–10)? Ovlivní složitost, množství textu a mini-her.
-2. **Pohled na procházce** – boční pohled (side-scroll, jednodušší, „pohádkový“) nebo shora/izometrický (volnější pohyb po světě)? Doporučení: boční pohled pro MVP.
-3. **Vedení vs. jízda** – chodí dítě vedle koníka, nebo na něm jezdí?
-4. **Grafika** – kreslí někdo vlastní obrázky, nebo počítáme s hotovými/licencovanými assety (případně AI koncepty)?
-5. **Rozsah** – je to hra pro vlastní dítě/rodinu, nebo plánujete vydání na Google Play?
-6. **Jazyk** – jen čeština, nebo i angličtina?
+Potvrzeno:
+- Věk 6–11 let.
+- Procházka s pohledem shora.
+- Koníka lze vodit i na něm jezdit.
+- Grafika veselá, hravá, cartoon a barevná; engine Godot 4.
+- Jen čeština.
+
+Otevřené:
+- **Vydání** – hra jen pro rodinu (APK do tabletu), nebo i na Google Play? Zatím počítáme s instalací APK; Google Play řešíme až ve fázi 4.
+- **Finální grafika** – kdo ji nakreslí nebo kde ji koupíme (rozhodne se před fází 4).

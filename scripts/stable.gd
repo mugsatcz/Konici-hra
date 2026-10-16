@@ -1,0 +1,172 @@
+extends Node2D
+## Stáj: krmení, napájení, česání a úklid koblížků.
+
+const PonyArt := preload("res://scripts/pony/pony_art.gd")
+const POOP_SPOTS := [Vector2(420, 560), Vector2(470, 600), Vector2(800, 590), Vector2(860, 555), Vector2(540, 620)]
+const NEEDS := [
+	["hunger", "Jídlo", Color("f0883e")],
+	["thirst", "Voda", Color("3fa9f5")],
+	["grooming", "Čistota", Color("c06fd8")],
+]
+
+var pony: Node2D
+var brushing := false
+var _bars := {}
+var _items_label: Label
+var _hint: Label
+var _brush_button: Button
+var _sparkles: Array = []
+
+
+func _ready() -> void:
+	pony = PonyArt.new()
+	pony.position = Vector2(640, 470)
+	pony.scale = Vector2(1.5, 1.5)
+	add_child(pony)
+	_build_ui()
+	GameState.needs_changed.connect(_refresh)
+	GameState.inventory_changed.connect(_refresh)
+	_refresh()
+
+
+func _build_ui() -> void:
+	var ui := CanvasLayer.new()
+	add_child(ui)
+
+	var panel := VBoxContainer.new()
+	panel.position = Vector2(24, 20)
+	panel.add_theme_constant_override("separation", 6)
+	ui.add_child(panel)
+	panel.add_child(UiStyle.label(GameState.pony_name, 40, Color.WHITE))
+	for need in NEEDS:
+		var row := HBoxContainer.new()
+		var name_label := UiStyle.label(need[1], 24, Color.WHITE)
+		name_label.custom_minimum_size.x = 110
+		row.add_child(name_label)
+		var bar := ProgressBar.new()
+		bar.custom_minimum_size = Vector2(220, 26)
+		bar.show_percentage = false
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = need[2]
+		fill.set_corner_radius_all(13)
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(1, 1, 1, 0.6)
+		bg.set_corner_radius_all(13)
+		bar.add_theme_stylebox_override("fill", fill)
+		bar.add_theme_stylebox_override("background", bg)
+		row.add_child(bar)
+		panel.add_child(row)
+		_bars[need[0]] = bar
+
+	_items_label = UiStyle.label("", 28, Color.WHITE)
+	_items_label.position = Vector2(840, 24)
+	ui.add_child(_items_label)
+
+	_hint = UiStyle.label("", 28, Color("4a2c1a"))
+	_hint.position = Vector2(420, 230)
+	ui.add_child(_hint)
+
+	var buttons := HBoxContainer.new()
+	buttons.position = Vector2(110, 610)
+	buttons.add_theme_constant_override("separation", 22)
+	ui.add_child(buttons)
+
+	var hay := UiStyle.big_button("Seno", Color("e0a526"))
+	hay.pressed.connect(func():
+		GameState.feed()
+		_say("Mňam!"))
+	buttons.add_child(hay)
+
+	var water := UiStyle.big_button("Voda", Color("3fa9f5"))
+	water.pressed.connect(func():
+		GameState.give_water()
+		_say("Glo glo glo"))
+	buttons.add_child(water)
+
+	_brush_button = UiStyle.big_button("Kartáč", Color("c06fd8"))
+	_brush_button.toggle_mode = true
+	_brush_button.toggled.connect(func(on):
+		brushing = on
+		_say("Hlaď koníka prstem" if on else ""))
+	buttons.add_child(_brush_button)
+
+	var walk := UiStyle.big_button("Na procházku", Color("5cb85c"), Vector2(300, 90))
+	walk.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/walk.tscn"))
+	buttons.add_child(walk)
+
+
+func _refresh() -> void:
+	for need in _bars:
+		_bars[need].value = GameState.needs[need]
+	pony.mood = GameState.happiness()
+	var inv := GameState.inventory
+	_items_label.text = "Jablka %d   Kytky %d   Podkovy %d" % [inv.apple, inv.flower, inv.horseshoe]
+	queue_redraw()
+
+
+func _say(text: String) -> void:
+	_hint.text = text
+	if text != "":
+		UiStyle.bounce(_hint)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var pos: Vector2
+	if event is InputEventScreenTouch and event.pressed:
+		pos = event.position
+		_try_clean(pos)
+	elif event is InputEventScreenDrag:
+		pos = event.position
+		if brushing and pos.distance_to(pony.position + Vector2(0, -20)) < 140:
+			GameState.brush(0.6)
+			_sparkles.append([pos, 0.6])
+		_try_clean(pos)
+
+
+func _try_clean(pos: Vector2) -> void:
+	for i in GameState.poops:
+		if pos.distance_to(POOP_SPOTS[i]) < 45:
+			GameState.clean_poop()
+			_say("Uklizeno!")
+			return
+
+
+func _process(delta: float) -> void:
+	for s in _sparkles:
+		s[1] -= delta
+	_sparkles = _sparkles.filter(func(s): return s[1] > 0.0)
+	if not _sparkles.is_empty():
+		queue_redraw()
+
+
+func _draw() -> void:
+	var size := get_viewport_rect().size
+	# Dřevěná stěna
+	draw_rect(Rect2(0, 0, size.x, 520), Color("b5774a"))
+	for x in range(0, int(size.x), 80):
+		draw_line(Vector2(x, 0), Vector2(x, 520), Color("9a6038"), 4)
+	# Okno s oblohou
+	draw_rect(Rect2(880, 130, 220, 160), Color("8fd3ff"))
+	draw_circle(Vector2(1050, 170), 25, Color("ffe066"))
+	draw_rect(Rect2(880, 130, 220, 160), Color("6b3f22"), false, 10)
+	draw_line(Vector2(990, 130), Vector2(990, 290), Color("6b3f22"), 8)
+	# Sláma na podlaze
+	draw_rect(Rect2(0, 500, size.x, size.y - 500), Color("f2cf6b"))
+	for i in 60:
+		var x := float((i * 97) % int(size.x))
+		var y := 510.0 + float((i * 53) % 200)
+		draw_line(Vector2(x, y), Vector2(x + 25, y - 6), Color("d9ae42"), 3)
+	# Žlab a kýbl
+	draw_rect(Rect2(140, 400, 160, 70), Color("8a5a35"))
+	draw_rect(Rect2(150, 390, 140, 20), Color("e0a526").lerp(Color("8a5a35"), 1.0 - GameState.needs.hunger / 100.0))
+	draw_rect(Rect2(1010, 400, 90, 90), Color("7d8b99"))
+	draw_rect(Rect2(1018, 408, 74, 20), Color("3fa9f5").lerp(Color("7d8b99"), 1.0 - GameState.needs.thirst / 100.0))
+	# Koblížky
+	for i in GameState.poops:
+		var p: Vector2 = POOP_SPOTS[i]
+		draw_circle(p + Vector2(0, 6), 20, Color("6b4423"))
+		draw_circle(p + Vector2(0, -8), 14, Color("7a5030"))
+		draw_circle(p + Vector2(0, -20), 8, Color("8a5c38"))
+	# Třpytky po česání
+	for s in _sparkles:
+		draw_circle(s[0], 10.0 * s[1], Color(1, 1, 0.6, s[1]))
