@@ -6,6 +6,7 @@ const BED_SIZE := Vector2(250, 150)
 var _hint: Label
 var _manure_label: Label
 var _splashes: Array = []
+var _redraw_timer := 0.0
 
 
 func _ready() -> void:
@@ -77,7 +78,11 @@ func _process(delta: float) -> void:
 		s[1] -= delta
 	_splashes = _splashes.filter(func(s): return s[1] > 0.0)
 	_manure_label.text = "Hnůj na hnojišti: %d     Mrkve: %d" % [GameState.manure, GameState.inventory.get("carrot", 0)]
-	queue_redraw()
+	# Mrkve rostou pomalu: stačí překreslit při cákání nebo jednou za čas.
+	_redraw_timer -= delta
+	if not _splashes.is_empty() or _redraw_timer <= 0.0:
+		_redraw_timer = 0.25
+		queue_redraw()
 
 
 func _draw() -> void:

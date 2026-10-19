@@ -53,6 +53,7 @@ var stars := 0
 var sound_on := true
 
 var _save_timer := 0.0
+var _notify_timer := 0.0
 
 
 func _ready() -> void:
@@ -65,7 +66,11 @@ func _process(delta: float) -> void:
 	for pony in ponies:
 		for need in DECAY_PER_MINUTE:
 			pony.needs[need] = maxf(0.0, pony.needs[need] - DECAY_PER_MINUTE[need] * decay_scale * delta / 60.0)
-	needs_changed.emit()
+	# Ubývání je pomalé, stačí dát vědět dvakrát za vteřinu (ne v každém snímku).
+	_notify_timer += delta
+	if _notify_timer > 0.5:
+		_notify_timer = 0.0
+		needs_changed.emit()
 	_save_timer += delta
 	if _save_timer > 10.0:
 		_save_timer = 0.0

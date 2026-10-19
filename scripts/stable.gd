@@ -20,6 +20,7 @@ var _name_label: Label
 var _switch: HBoxContainer
 var _sparkles: Array = []
 var _brush_sound := 0
+var _had_sparkles := false
 
 
 func _ready() -> void:
@@ -198,7 +199,10 @@ func _process(delta: float) -> void:
 	for s in _sparkles:
 		s[1] -= delta
 	_sparkles = _sparkles.filter(func(s): return s[1] > 0.0)
-	queue_redraw()
+	# Stáj se překresluje jen když se v ní něco hýbe (třpytky, lucerna, krystal).
+	if not _sparkles.is_empty() or _had_sparkles or GameState.wears("lantern") or GameState.wears("crystal"):
+		queue_redraw()
+	_had_sparkles = not _sparkles.is_empty()
 
 
 func _draw() -> void:
